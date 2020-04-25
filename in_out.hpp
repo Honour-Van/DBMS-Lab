@@ -19,25 +19,26 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "interpreter.hpp"
 
 //--------------------------------------------------------------------------------------------
 
 namespace in_out{
 using std::string;
 
-string cur_db; //used for indicating the current database, called in use sentence.
-std::vector<std::map<int, string>> cache; // used to store the data temporarily.
 struct Table
 {
     Table() : col_num(0) { }
     int col_num;
-    std::map<int, string> info_;
-    void add(int i, string s) { info_.insert(make_pair(i, s)); col_num++;}
+    std::map<string, int> info_;//first is the length of col_name, indicating the type of col_name; 
+                                //second is the name is the col_name
+    void add(string s, int i) { info_.insert(make_pair(s, i)); col_num++;}
+    void print() const;
 };
 
 
 void CreateDatabase(const string& name);
-void CreateTable(const string& name, in_out::Table);
+void CreateTable(const string& name, const in_out::Table&);
 void Use(string src);
 void Insert(string, std::vector<string>);
 

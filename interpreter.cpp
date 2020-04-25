@@ -106,7 +106,7 @@ void Create(char mode, const string& src)
             getline(ss, type, ',');
             trim(name); trim(type);
             if (type[0] == 'i') 
-                param.add(0, name);
+                param.add(name, 0);
             else if (type[0] == 'v') //this may be improved : in the form of 'varchar (20)' isn;t supported
                                     //2.1 : now supported.
             {
@@ -114,7 +114,7 @@ void Create(char mode, const string& src)
                 while (!isdigit(type[8+cnt])) cnt++;
                 while (std::isdigit(type[8+cnt]))
                     ans = ans * 10 + (type[8+cnt]-'0'), cnt++;
-                param.add(ans, name);
+                param.add(name, ans);
             }
         }
         in_out::CreateTable(mat[1], param);
