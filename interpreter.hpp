@@ -1,0 +1,88 @@
+/**
+ * @file: interpreter.hpp
+ * @author: fhn
+ * @date: 4/20
+ * @version: 1.0 to be improved : a function which formats a string into pieces of strings without spaces in them 
+ * @description: receiving params from the ui::Input(), 
+ *                  containing the main parts of interpreters
+ *                  in different functions.
+*/
+
+//--------------------------------------------------------------------------------------------
+
+#ifndef INTERPRETER_GUARD
+#define INTERPRETER_GUARD
+
+#include <string>
+#include "in_out.hpp"
+
+//--------------------------------------------------------------------------------------------
+
+
+/**
+ * @author: fhn
+ * @date: 4/21
+ * @description:    act as the public interface and shunting entry;
+ *                  a core part of the whole program.
+ * @version: 1.0
+*/
+void Interpret(std::string&);
+
+/**
+ * @author: fhn
+ * @date: 4/21
+ * @description: a namespace targeted for Interpret();
+ * @version: 
+*/
+namespace sql_itp{
+using std::string;
+
+void trim(string&);
+//free of where
+
+/**
+ * @author: fhn
+ * @date: 4/22
+ * @description: call in_out::Create(database_name) to create a database(as a filefolder) or table(file)
+*/
+void Create(char mode, const string& src);
+
+/**
+ * @author: fhn
+ * @date: 4/22
+ * @description: call in_out::Use(database_name), impl by changing cur_db.
+*/
+void Use(const string& src);
+
+/**
+* @author: fhn
+* @date: 4/22
+* @description: call in_out::Insert(table_name, )
+*/
+void Insert(const string& src);
+
+
+//fucking blessed with where clause
+
+struct Clause
+{
+    string name;
+    string op;
+    string value;
+};
+
+/**
+* @author: fhn
+* @date: 4/25
+* @description: return a Clause obj including info of Where.
+*/
+Clause Where(const string& src);
+
+void Select(const string& src);
+void Update(const string& src);
+void Delete(const string& src);
+
+} // namespace sql_itp
+
+
+#endif

@@ -1,0 +1,27 @@
+{
+    "version": "2.0.0",
+    "tasks": [{
+            "label": "compile",
+            "command": "g++",
+            "args": [
+                "-g",
+                "main.cpp",
+                "-D _LOC_",
+                "-include",
+                "${workspaceRoot}\\.vscode\\head.h",
+                "interpreter.cpp",
+                "data_memory.cpp",
+                "exception.cpp",
+                "in-out.cpp",
+                "ui.cpp",
+                "time_cnt.cpp",
+                "-o",
+                "main.exe"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
