@@ -25,9 +25,10 @@
  * @author: fhn
  * @date: 4/21
  * @description: act as the public interface and shunting entry
- * @version: 1.0
+ * @version: v1.0
+ *           v1.01: changed param string to 'const&'
 */
-void Interpret(std::string& raw)
+void Interpret(const std::string& raw)
 {
     using std::string; using std::stringstream;
     string judge;
@@ -95,7 +96,7 @@ void Create(char mode, const string& src)
                                 //table name must be in the alphas, nums and '_'
         std::smatch mat;
         regex_match(src, mat, pattern);//mat[1] is tablename, mat[2] is the param of columns.
-        in_out::Table param;
+        in_out::ColInfo param;
         std::string name, type;
         std::stringstream ss(mat[2]);
         while (ss.peek() != EOF) // if using "while (ss)", the eof won't be trigered in time.
@@ -106,7 +107,7 @@ void Create(char mode, const string& src)
             getline(ss, type, ',');
             trim(name); trim(type);
             if (type[0] == 'i') 
-                param.add(name, 0);
+                param.AddCol(name, 0);
             else if (type[0] == 'v') //this may be improved : in the form of 'varchar (20)' isn;t supported
                                     //2.1 : now supported.
             {
@@ -114,7 +115,7 @@ void Create(char mode, const string& src)
                 while (!isdigit(type[8+cnt])) cnt++;
                 while (std::isdigit(type[8+cnt]))
                     ans = ans * 10 + (type[8+cnt]-'0'), cnt++;
-                param.add(name, ans);
+                param.AddCol(name, ans);
             }
         }
         in_out::CreateTable(mat[1], param);

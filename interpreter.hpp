@@ -19,14 +19,7 @@
 //--------------------------------------------------------------------------------------------
 
 
-/**
- * @author: fhn
- * @date: 4/21
- * @description:    act as the public interface and shunting entry;
- *                  a core part of the whole program.
- * @version: 1.0
-*/
-void Interpret(std::string&);
+void Interpret(const std::string&);
 
 /**
  * @author: fhn
