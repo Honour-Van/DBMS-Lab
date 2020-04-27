@@ -174,7 +174,7 @@ void Insert(const string& src)
 */
 void Select(const string& src)
 {
-    std::regex pattern{"^.*?select\\s+(.*)\\s+from\\s+(\\w+)\\s+(where.*?)\\s+;.*?$"};
+    std::regex pattern{"^.*?select\\s*(.*)\\s*from\\s+(\\w+)\\s+(where.*?)\\s*;.*?$"};
     std::smatch mat;
     regex_match(src, mat, pattern);
     std::string name(mat[2]);
@@ -198,10 +198,10 @@ void Select(const string& src)
 */
 void Update(const string& src)
 {
-    std::regex pattern{"^.*?update\\s+(\\w+)\\s+set\\s+(.+)\\s+=\\s+newvalue\\s+(where.*?)\\s+;.*?$", std::regex::icase};
+    std::regex pattern{"^.*?update\\s+(\\w+)\\s+set\\s+(.+)\\s+=\\s+(.*?)\\s+(where.*?)\\s+;.*?$", std::regex::icase};
     std::smatch mat;
     regex_match(src, mat, pattern);
-    in_out::Update(mat[1].str(), mat[2].str(), Where(mat[3].str()));
+    in_out::Update(mat[1].str(), mat[2].str(), mat[3].str(), Where(mat[4].str()));
 }
 
 /**
@@ -231,8 +231,9 @@ Clause Where(const string& src)
 {
     std::regex pattern{"^.*?where\\s+(\\w+)\\s+(.*?)\\s+(.*?)\\s+;.*?$", std::regex::icase};
     std::smatch mat;
-    regex_match(src, mat, pattern);
-    return Clause{mat[1].str(), mat[2].str(), mat[3].str()};
+    if (regex_match(src, mat, pattern))
+        return Clause{mat[1].str(), mat[2].str(), mat[3].str()};
+    else return Clause();
 }
 
 

@@ -20,7 +20,6 @@
 #include <vector>
 #include <map>
 #include <utility>
-#include <unordered_map>
 #include "interpreter.hpp"
 
 //--------------------------------------------------------------------------------------------
@@ -44,6 +43,7 @@ public:
     void AddCol(string, int, bool mode = 1);
     int col_num() const { return col_num_; }
     int col_len(int col) const { return col_info_[col].second; }
+    int FindCol(const string&); //O(n)
     virtual void SetColNum(int col_num) { col_num_ = col_num;}
     virtual void PrintInfo() const;
 };
@@ -58,15 +58,25 @@ class Table : public ColInfo
 {
 private:
     int elem_num_;
-    std::vector<std::vector<std::pair<string,int>>> elem_info_; // used to store the data temporarily. the ordered 'map' guarantee the finding cost is O(n): a traversal cost.
+    std::vector<std::vector<std::pair<string,int>>> elem_info_; // used to store the data temporarily. the ordered 'map' guarantee the finding cost is O(n): a traversal cost. first dimension is column, second is id within vector, key is elem, value is index.
 public:
     Table() : ColInfo(), elem_num_(0) { }
     int elem_num() const { return elem_num_; }
+    
     inline void AddElem(int, int, string);
+    std::pair<string, int> GetElem(int col, int row)const { return elem_info_[col][row]; }
+    
+    void SetElem(int col, int row, string newval) { elem_info_[col][row].first = newval; }
     void SetElemNum(const int elem_num) { elem_num_ = elem_num;}
     void SetColNum (const int col_num );
+    void EraseElem(const int& id);
+
     void InitRead();
     void PrintInfo() const;
+    
+    friend void Select(string, std::vector<string>, sql_itp::Clause);
+    friend void Update(string table_name, string col_name, string newvalue, sql_itp::Clause);
+    friend void Delete(string table_name, sql_itp::Clause);
 };
 
 
@@ -75,8 +85,12 @@ void CreateTable(const string& name, const in_out::ColInfo&);
 void Use(string);
 void Insert(string, std::vector<string>);
 
+void PrintHead(std::vector<int> col_len);
+void PrintLine(std::vector<int> col_len, std::vector<int> item_col, int row_index);
+void PrintTail(std::vector<int> col_len);
+
 void Select(string, std::vector<string>, sql_itp::Clause);
-void Update(string table_name, string col_name, sql_itp::Clause);
+void Update(string table_name, string col_name, string newvalue, sql_itp::Clause);
 void Delete(string table_name, sql_itp::Clause);
 
 }

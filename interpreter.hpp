@@ -62,6 +62,8 @@ struct Clause
     string name;
     string op;
     string value;
+    Clause(string a, string b, string c) :name(a), op(b), value(c){ }; 
+    Clause() : name(), op(), value(){ }
 };
 
 /**
