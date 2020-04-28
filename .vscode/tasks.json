@@ -9,10 +9,10 @@
                 "-D _LOC_",
                 "-include",
                 "${workspaceRoot}\\.vscode\\head.h",
-                "interpreter.cpp",
-                "exception.cpp",
-                "in_out.cpp",
                 "ui.cpp",
+                "interpreter.cpp",
+                "in_out.cpp",
+                "exception.cpp",
                 "time_cnt.cpp",
                 "-o",
                 "main.exe"

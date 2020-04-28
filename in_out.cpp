@@ -256,7 +256,7 @@ void Insert(string table_name, vector<string> col_name)
                 in order to simplify the output of charts, we input all the tableinfo once a time.
  * @version: v1.0
 */
-void Select(string table_name, vector<string> item, sql_itp::Clause where)
+void Select(string table_name, vector<string> item, Clause where)
 {
     string file_path = cur_db + "\\" + table_name;
     if (cur_tb != table_name)
@@ -416,7 +416,7 @@ void PrintTail(vector<int> col_len)
 
 //--------------------------------------------------------------------------------------------
 
-void Update(string table_name, string col_name, string newvalue, sql_itp::Clause where)
+void Update(string table_name, string col_name, string newvalue, Clause where)
 {
     string file_path = cur_db + "\\" + table_name;
     if (cur_tb != table_name)
@@ -476,7 +476,7 @@ void Update(string table_name, string col_name, string newvalue, sql_itp::Clause
     cache.PrintInfo();
     freopen("CON", "w", stdout);
 }
-void Delete(string table_name, sql_itp::Clause where)
+void Delete(string table_name, Clause where)
 {
     string file_path = cur_db + "\\" + table_name;
     if (cur_tb != table_name)

@@ -24,6 +24,17 @@
 
 //--------------------------------------------------------------------------------------------
 
+#ifndef CLAUSEGUARD
+#define CLAUSEGUARD
+struct Clause
+{
+    std::string name;
+    std::string op;
+    std::string value;
+    Clause(std::string a, std::string b, std::string c) :name(a), op(b), value(c){ }; 
+    Clause() : name(), op(), value(){ }
+};
+#endif
 namespace in_out{
 using std::string;
 /**
@@ -74,14 +85,14 @@ public:
     void InitRead();
     void PrintInfo() const;
     
-    friend void Select(string, std::vector<string>, sql_itp::Clause);
-    friend void Update(string table_name, string col_name, string newvalue, sql_itp::Clause);
-    friend void Delete(string table_name, sql_itp::Clause);
+    friend void Select(string, std::vector<string>, Clause);
+    friend void Update(string table_name, string col_name, string newvalue, Clause);
+    friend void Delete(string table_name, Clause);
 };
 
 
 void CreateDatabase(const string& name);
-void CreateTable(const string& name, const in_out::ColInfo&);
+void CreateTable(const string& name, const ColInfo&);
 void Use(string);
 void Insert(string, std::vector<string>);
 
@@ -89,9 +100,9 @@ void PrintHead(std::vector<int> col_len);
 void PrintLine(std::vector<int> col_len, std::vector<int> item_col, int row_index);
 void PrintTail(std::vector<int> col_len);
 
-void Select(string, std::vector<string>, sql_itp::Clause);
-void Update(string table_name, string col_name, string newvalue, sql_itp::Clause);
-void Delete(string table_name, sql_itp::Clause);
+void Select(string, std::vector<string>, Clause);
+void Update(string table_name, string col_name, string newvalue, Clause);
+void Delete(string table_name, Clause);
 
 }
 

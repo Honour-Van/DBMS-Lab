@@ -20,6 +20,17 @@
 
 
 void Interpret(const std::string&);
+#ifndef CLAUSEGUARD
+#define CLAUSEGUARD
+struct Clause
+{
+    std::string name;
+    std::string op;
+    std::string value;
+    Clause(std::string a, std::string b, std::string c) :name(a), op(b), value(c){ }; 
+    Clause() : name(), op(), value(){ }
+};
+#endif
 
 /**
  * @author: fhn
@@ -56,15 +67,6 @@ void Insert(const string& src);
 
 
 //fucking blessed with where clause
-
-struct Clause
-{
-    string name;
-    string op;
-    string value;
-    Clause(string a, string b, string c) :name(a), op(b), value(c){ }; 
-    Clause() : name(), op(), value(){ }
-};
 
 /**
 * @author: fhn
