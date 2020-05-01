@@ -86,7 +86,7 @@ std::string Interface::Input()
     bool already_in = 0;// to indicate whether we have input or not
     while (getline(cin, line))
     {
-        if (already_in) 
+        if (already_in && line.size() > 1) 
             ss << ' ';
         if (line.size()){
             ss << line;

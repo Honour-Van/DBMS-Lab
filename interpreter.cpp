@@ -40,6 +40,10 @@ void Interpret(const std::string& raw)
             ss >> judge;
             sql_itp::Create(judge[0], raw);
             break;
+        case 'i': case 'I':
+            ss >> judge;
+            sql_itp::Insert(raw);
+            break;
         case 'u': case 'U':
             if (judge[1] == 's')
                 sql_itp::Use(raw);
@@ -51,6 +55,7 @@ void Interpret(const std::string& raw)
         case 'd': case 'D':
             sql_itp::Delete(raw);
             break;
+        std::cerr << "sentence syntax went wrong." << std::endl;
     }
 }
 
@@ -148,7 +153,8 @@ void Insert(const string& src)
 {
     std::regex pattern{"^.*?insert.*?into.*?(\\w+).*?value.*?[(]\\s*(.*)[)].*?;.*?$", std::regex::icase};
     std::smatch mat;
-    regex_match(src, mat, pattern);
+    if (!regex_match(src, mat, pattern))
+    { std::cerr << "insert command line wrong" << std::endl; return; }
     std::string name(mat[1]);
     std::stringstream ss(mat[2]);
     std::vector<string> vec_param;

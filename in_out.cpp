@@ -40,7 +40,7 @@ Table cache;
 void ColInfo::PrintInfo() const
 {
 #ifdef _LOC_
-std::clog << "ColInfo::PrintIno() called." << endl;
+std::clog << "ColInfo::PrintInfo() called." << endl;
 #endif
     cout << col_num_ << ' ' << 0 << endl; // the second 0 indicates the num of elem (when table is created)
     for (auto it : col_info_)
@@ -171,7 +171,8 @@ void CreateDatabase(const string& name)
 */
 void CreateTable(const string& name, const ColInfo& column_info)
 {
-    freopen(name.c_str(), "w", stdout);
+    string file_path = cur_db + "\\" + name;
+    freopen(file_path.c_str(), "w", stdout);
     column_info.PrintInfo();// if we want to remain the const of table_info, we should define the print() as const.
     freopen("CON", "w", stdout);
 }

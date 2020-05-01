@@ -19,3 +19,15 @@ create database
 
 ## in_out
 be careful about the param of `ostream::write(const char *s, streamsize n)`.
+
+create database test1;
+use test1;
+create table table1(id int, name varchar(20));
+insert into table1 value(1, xiaoming);
+insert into table1 value(2, xiaohua);
+insert into table1 value(3, xiaoli);
+select name from table1;
+update table1 set name = xiaozhao
+where id = 3;
+delete from test1 where id < 2;
+select * from table1;
