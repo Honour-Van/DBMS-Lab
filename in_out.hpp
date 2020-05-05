@@ -21,6 +21,7 @@
 #include <map>
 #include <utility>
 #include "interpreter.hpp"
+#include "exception.hpp"
 
 //--------------------------------------------------------------------------------------------
 
@@ -69,6 +70,7 @@ class Table : public ColInfo
 {
 private:
     int elem_num_;
+    std::vector<bool> isDelete;
     std::vector<std::vector<std::pair<string,int>>> elem_info_; // used to store the data temporarily. the ordered 'map' guarantee the finding cost is O(n): a traversal cost. first dimension is column, second is id within vector, key is elem, value is index.
 public:
     Table() : ColInfo(), elem_num_(0) { }
@@ -96,13 +98,15 @@ void CreateTable(const string& name, const ColInfo&);
 void Use(string);
 void Insert(string, std::vector<string>);
 
-void PrintHead(std::vector<int> col_len);
+void PrintHead(std::vector<int> col_len, std::vector<int> item_col);
 void PrintLine(std::vector<int> col_len, std::vector<int> item_col, int row_index);
 void PrintTail(std::vector<int> col_len);
 
 void Select(string, std::vector<string>, Clause);
 void Update(string table_name, string col_name, string newvalue, Clause);
 void Delete(string table_name, Clause);
+
+bool 
 
 }
 
