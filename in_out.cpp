@@ -187,6 +187,7 @@ void CreateDatabase(const string& name)
 {
     string mkdir = "mkdir " + name;
     system(mkdir.c_str());
+    cout << "Query OK, 1 row affected " << endl;
 }
 
 /**
@@ -358,80 +359,34 @@ std::clog << sel_cnt << " col(s) selected" << endl;
             if (!isalnum(it))
                 { std::cerr << "Invalid value in where clause." << endl; return; }
 
+        bool (*p)(const string&, const string&);
+        
         if (where.op == "=")
-        {
-            for (auto it : cache.elem_info_[col_base])
-                if (it.first == where.value)
-                {
-                    if (hasnt)
-                        PrintHead(col_len, item_col);
-                    PrintLine(col_len, item_col, it.second);
-                    hasnt = 0;
-                }
-            if (!hasnt) PrintTail(col_len);
-        }
+            p = equal_to;
         else if (where.op == ">")
-        {
-            for (auto it : cache.elem_info_[col_base])
-                if (it.first > where.value)
-                {
-                    if (hasnt)
-                        PrintHead(col_len, item_col);
-                    PrintLine(col_len, item_col, it.second);
-                    hasnt = 0;
-                }
-            if (!hasnt) PrintTail(col_len);
-        }
+            p = greater;
         else if (where.op == ">=")
-        {
-            for (auto it : cache.elem_info_[col_base])
-                if (it.first >= where.value)
-                {
-                    if (hasnt)
-                        PrintHead(col_len, item_col);
-                    PrintLine(col_len, item_col, it.second);
-                    hasnt = 0;
-                }
-            if (!hasnt) PrintTail(col_len);
-        }
+            p = greater_equal;
         else if (where.op == "<")
-        {
-            for (auto it : cache.elem_info_[col_base])
-                if (it.first < where.value)
-                {
-                    if (hasnt)
-                        PrintHead(col_len, item_col);
-                    PrintLine(col_len, item_col, it.second);
-                    hasnt = 0;
-                }
-            if (!hasnt) PrintTail(col_len);
-        }
+            p = less;
         else if (where.op == "<=")
-        {
-            for (auto it : cache.elem_info_[col_base])
-                if (it.first <= where.value)
-                {
-                    if (hasnt)
-                        PrintHead(col_len, item_col);
-                    PrintLine(col_len, item_col, it.second);
-                    hasnt = 0;
-                }
-            if (!hasnt) PrintTail(col_len);
-        }
+            p = less_equal;
         else if (where.op == "!=")
-        {
-            for (auto it : cache.elem_info_[col_base])
-                if (it.first != where.value)
-                {
-                    if (hasnt)
-                        PrintHead(col_len, item_col);
-                    PrintLine(col_len, item_col, it.second);
-                    hasnt = 0;
-                }
-            if (!hasnt) PrintTail(col_len);
-        }
+            p = not_equal_to;
         else
             std::cerr << "unknown where operator type when Select()" << endl;
+
+        for (auto it : cache.elem_info_[col_base])
+            if (p(it.first, where.value))
+            {
+                if (hasnt)
+                    PrintHead(col_len, item_col);
+                PrintLine(col_len, item_col, it.second);
+                hasnt = 0;
+            }
+        if (!hasnt) PrintTail(col_len);
+        
+        
     }
     else std::cerr << "select wrong in both modes" << endl;
 }
@@ -533,43 +488,26 @@ void Update(string table_name, string col_name, string newvalue, Clause where)
     int bc = cache.FindCol(where.name);
     if (bc == -1) { std::cerr << "col to judge (update) invalid " << endl; return; }
 
+    bool (*p)(const string&, const string&);
+        
     if (where.op == "=")
-    {
-        for (auto it : cache.elem_info_[bc])
-            if (it.first == where.value)
-                cache.SetElem(nc, it.second, newvalue);
-    }
+        p = equal_to;
     else if (where.op == ">")
-    {
-        for (auto it : cache.elem_info_[bc])
-            if (it.first > where.value)
-                cache.SetElem(nc, it.second, newvalue);
-    }
+        p = greater;
     else if (where.op == ">=")
-    {
-        for (auto it : cache.elem_info_[bc])
-            if (it.first >= where.value)
-                cache.SetElem(nc, it.second, newvalue);
-    }
+        p = greater_equal;
     else if (where.op == "<")
-    {
-        for (auto it : cache.elem_info_[bc])
-            if (it.first < where.value)
-                cache.SetElem(nc, it.second, newvalue);
-    }
+        p = less;
     else if (where.op == "<=")
-    {
-        for (auto it : cache.elem_info_[bc])
-            if (it.first <= where.value)
-                cache.SetElem(nc, it.second, newvalue);
-    }
+        p = less_equal;
     else if (where.op == "!=")
-    {
-        for (auto it : cache.elem_info_[bc])
-            if (it.first != where.value)
+        p = not_equal_to;
+    else
+        std::cerr << "unknown where operator type when Select()" << endl;
+
+    for (auto it : cache.elem_info_[bc])
+            if (p(it.first, where.value))
                 cache.SetElem(nc, it.second, newvalue);
-    }
-    else std::cerr << "unknown where type in Update()" << endl;
 
     freopen(file_path.c_str(), "w", stdout);
     cache.PrintInfo();
@@ -591,45 +529,31 @@ void Delete(string table_name, Clause where)
     int bc = cache.FindCol(where.name);
     if (bc == -1) { std::cerr << "col to judge (delete) invalid " << endl; return; }
 
+    bool (*p)(const string&, const string&);
+        
     if (where.op == "=")
-    {
-        for (auto it : cache.elem_info_[bc])
+        p = equal_to;
+    else if (where.op == ">")
+        p = greater;
+    else if (where.op == ">=")
+        p = greater_equal;
+    else if (where.op == "<")
+        p = less;
+    else if (where.op == "<=")
+        p = less_equal;
+    else if (where.op == "!=")
+        p = not_equal_to;
+    else
+        std::cerr << "unknown where operator type when Select()" << endl;
+    
+    for (auto it : cache.elem_info_[bc])
             if (it.first == where.value)
                 cache.EraseElem(it.second);
-    }
-    else if (where.op == ">")
-    {
-        for (auto it : cache.elem_info_[bc])
-            if (it.first > where.value)
-                cache.EraseElem(it.second);
-    }
-    else if (where.op == ">=")
-    {
-        for (auto it : cache.elem_info_[bc])
-            if (it.first >= where.value)
-                cache.EraseElem(it.second);
-    }
-    else if (where.op == "<")
-    {
-        for (auto it : cache.elem_info_[bc])
-            if (it.first < where.value)
-                cache.EraseElem(it.second);
-    }
-    else if (where.op == "<=")
-    {
-        for (auto it : cache.elem_info_[bc])
-            if (it.first <= where.value)
-                cache.EraseElem(it.second);
-    }
-    else if (where.op == "!=")
-    {
-        for (auto it : cache.elem_info_[bc])
-            if (it.first != where.value)
-                cache.EraseElem(it.second);
-    }
+
     freopen(file_path.c_str(), "w", stdout);
     cache.PrintInfo();
     freopen("CON", "w", stdout);
+    cur_tb = "";
 }
 
 }

@@ -106,7 +106,12 @@ void Select(string, std::vector<string>, Clause);
 void Update(string table_name, string col_name, string newvalue, Clause);
 void Delete(string table_name, Clause);
 
-bool 
+inline bool equal_to       (const string& a, const string& b) { return a == b; }
+inline bool not_equal_to   (const string& a, const string& b) { return a != b; }
+inline bool greater        (const string& a, const string& b) { return a > b; }
+inline bool less           (const string& a, const string& b) { return a < b; }
+inline bool greater_equal  (const string& a, const string& b) { return a >= b; }
+inline bool less_equal     (const string& a, const string& b) { return a <= b; }
 
 }
 

@@ -43,3 +43,4 @@ use test1;
 select* from table1;
 delete from table1 where id > 2;
 select*from table1;
+
