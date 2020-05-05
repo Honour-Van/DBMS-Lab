@@ -11,7 +11,6 @@
 //--------------------------------------------------------------------------------------------
 
 #include "in_out.hpp"
-#include <iomanip>
 #include <sstream>// in v1.0 used for piece together the cmd
 //--------------------------------------------------------------------------------------------
 
@@ -40,7 +39,7 @@ Table cache;
 void ColInfo::PrintInfo() const
 {
 #ifdef _LOC_
-std::clog << "ColInfo::PrintInfo() called." << endl;
+std::clog << "ColInfo::PrintInfo() called. column info was put once" << endl;
 #endif
     cout << col_num_ << ' ' << 0 << endl; // the second 0 indicates the num of elem (when table is created)
     for (auto it : col_info_)
@@ -62,6 +61,7 @@ int ColInfo::FindCol(const string & name)
         if ((*it).first == name)
             return it - col_info_.begin();
     }
+    std::cerr << "col not found" << endl;
     return -1;
 }
 
@@ -73,13 +73,20 @@ int ColInfo::FindCol(const string & name)
 */
 void Table::PrintInfo() const
 {
+#ifdef _LOC_
+std::clog << "table print once" << endl;
+#endif
     cout << col_num_ << ' ' << elem_num_ << endl;
     int cnt = 0;
     for (int i = 0; i < col_num_; i++)
     {
         cout << col_info_[i].first << ' ' << col_info_[i].second << ' ';
-        for (int j = 0; j < elem_num_; j++)
-            cout << elem_info_[i][j].first << ' ';
+#ifdef _LOC_
+std::clog << "elem num is " << elem_num_ << "  and before deleting: "<< elem_info_[0].size() << endl;
+#endif
+        for (int j = 0; j < elem_info_[0].size(); j++)
+            if (!isDelete[j])
+                cout << elem_info_[i][j].first << ' ';
         cout << endl;
     }
 }
@@ -93,6 +100,9 @@ void Table::PrintInfo() const
 */
 void ColInfo::AddCol(string s, int i, bool mode)
 { 
+#ifdef _LOC_
+std::clog << "a col was added" << endl;
+#endif
     col_info_.push_back(make_pair(s, i));
     if (mode) 
         col_num_++;
@@ -106,9 +116,14 @@ void ColInfo::AddCol(string s, int i, bool mode)
 */
 void Table::InitRead()
 {
+#ifdef _LOC_
+std::clog << "the table was initialized" << endl;
+#endif
     cin >> col_num_ >> elem_num_;
     string tmp_name; int tmp_length; string tmp_elem;
     
+    SetColNum(col_num_);
+    isDelete.reserve(elem_num_ * 2);
     for (int i = 0; i < col_num_; i++)
     {
         cin >> tmp_name >> tmp_length;
@@ -129,6 +144,9 @@ void Table::InitRead()
 */
 void Table::SetColNum(const int col_num)
 {
+#ifdef _LOC_
+std::clog << "column num was set as "<< col_num << endl;
+#endif
     ColInfo::SetColNum(col_num); 
     elem_info_.resize(col_num);
 }
@@ -141,13 +159,21 @@ void Table::SetColNum(const int col_num)
 */
 void Table::AddElem(int col_no, int index_num, string elem)
 {
+#ifdef _LOC_
+std::clog << "vector[" << col_no << "] was added with elem. now  elem_num  is " <<  index_num + 1  << endl;
+#endif
+    isDelete.push_back(false);
     elem_info_[col_no].push_back(make_pair(elem, index_num));
 }
 
 void Table::EraseElem(const int& id)
 {
-    for (auto it : elem_info_)
-        it.erase(it.begin()+id);
+#ifdef _LOC_
+std::clog << "the "<< id << "th elem was erased" << endl;
+#endif
+    if (isDelete[id]) return;
+    elem_num_--;
+    isDelete[id] = true;
 }
 
 /**
@@ -171,10 +197,15 @@ void CreateDatabase(const string& name)
 */
 void CreateTable(const string& name, const ColInfo& column_info)
 {
+    if (cur_db.size() == 0) 
+    { std::cerr << "no database in use" << endl; return; }
     string file_path = cur_db + "\\" + name;
+    if (exist(file_path))
+    { std::cerr << "file already exists" << endl; return;}
     freopen(file_path.c_str(), "w", stdout);
     column_info.PrintInfo();// if we want to remain the const of table_info, we should define the print() as const.
     freopen("CON", "w", stdout);
+    cout << "Query OK, 0 rows affected" << endl << endl;
 }
 
 /**
@@ -186,8 +217,14 @@ void CreateTable(const string& name, const ColInfo& column_info)
 void Use(string name)
 {
     string tmp = "cd " + name;
-    if (!system(tmp.c_str()))
+    // if (cur_db == name)
+    // { std::cerr << "database already in use." << endl;}
+    if (!system(tmp.c_str()))//if the folder doesn't exist, system will warns.
+    {    
         cur_db = name;
+        cur_tb = "";
+        cout << "Database changed" << endl;
+    }
 }
 
 //--------------------------------------------------------------------------------------------
@@ -203,6 +240,8 @@ void Use(string name)
 */
 void Insert(string table_name, vector<string> col_name)
 {
+    if (!cur_db.size())
+    { std::cerr << "no database used" << endl; return;}
     string file_path = cur_db + "\\" + table_name;//default
     if (cur_tb == table_name) // to use cache to just insert into cache
     {
@@ -246,8 +285,10 @@ void Insert(string table_name, vector<string> col_name)
     }
     freopen("CON", "r", stdin);
     cache.SetElemNum(cache.elem_num()+1);
+    
     freopen(file_path.c_str(), "w", stdout);
     cache.PrintInfo();
+    freopen("CON", "w", stdout);
 }
 
 /**
@@ -256,50 +297,66 @@ void Insert(string table_name, vector<string> col_name)
  * @description: execute Select sentence cmds. 
                 in order to simplify the output of charts, we input all the tableinfo once a time.
  * @version: v1.0
+ *           v1.1: about rereading: if this is the first time, the read and the unknown elem_num  is compatible
 */
 void Select(string table_name, vector<string> item, Clause where)
 {
+    if (!cur_db.size())
+    { std::cerr << "ERROR 1046 (3D000): No database selected" << endl; return; }
     string file_path = cur_db + "\\" + table_name;
     if (cur_tb != table_name)
     {
         freopen(file_path.c_str(), "r", stdin);
         cache.InitRead();
-        freopen("CON", "w", stdout);
+        freopen("CON", "r", stdin); //here we didn't get the stdin back, which caused a bad loops
         cur_tb = table_name;//evething has been put in, then renew;(somehow different from the Insert()): possibly because we need to output once a time
     }
 
     //select columns to be put
-    vector<int> item_col(cache.col_num()); int tmp;
+    vector<int> item_col(cache.col_num()); int tmp, sel_cnt = 0;
+
+#ifdef _LOC_
+std::clog << item[0] << endl;
+#endif
+
     if (item[0] == "*") 
-        for (int i = 0; i < cache.col_num(); i++) item_col[i] = i; 
+        for (int i = 0; i < cache.col_num(); i++) item_col[i] = i, sel_cnt++; 
     else for (int i = 0; i < item.size(); i++)
         {
             tmp = cache.FindCol(item[i]);
             if (tmp != -1)
-                item_col[i] = tmp;
+                item_col[i] = tmp, sel_cnt++;
         }
-
-    vector<int> col_len(item_col.size());
+#ifdef _LOC_
+if (item[0] ==  "*")
     for (int i = 0; i < item_col.size(); i++)
+        cout << "item_col[" << i  << "] = " << item_col[i]<< endl; 
+std::clog << sel_cnt << " col(s) selected" << endl;
+#endif
+    vector<int> col_len(sel_cnt);
+    for (int i = 0; i < sel_cnt; i++)
     {
         int tmp = cache.col_info_[item_col[i]].second;
-        if (tmp) col_len.push_back(tmp);
-        else col_len.push_back(10);
+        if (tmp) col_len[i] = tmp;
+        else col_len[i] = 10;
     }
 
     //select rows to be put
     if (!where.op.size()) // no more rules
     {
-        PrintHead(col_len);
+        PrintHead(col_len, item_col);
         for (int i = 0; i < cache.elem_num(); i++)
             PrintLine(col_len, item_col, i);
         PrintTail(col_len);
     }
-    if (where.op.size())// where branch
+    else if (where.op.size())// where branch
     {    
         int col_base, hasnt = 1;
         col_base = cache.FindCol(where.name); 
-        if (col_base = -1)  { std::cerr << "Invalid name in where clause."; return; } 
+        if (col_base == -1)  { std::cerr << "Invalid name in where clause." << endl; return; } //assignment and judge......
+        for (auto it : where.value)
+            if (!isalnum(it))
+                { std::cerr << "Invalid value in where clause." << endl; return; }
 
         if (where.op == "=")
         {
@@ -307,8 +364,9 @@ void Select(string table_name, vector<string> item, Clause where)
                 if (it.first == where.value)
                 {
                     if (hasnt)
-                        PrintHead(col_len);
+                        PrintHead(col_len, item_col);
                     PrintLine(col_len, item_col, it.second);
+                    hasnt = 0;
                 }
             if (!hasnt) PrintTail(col_len);
         }
@@ -318,8 +376,9 @@ void Select(string table_name, vector<string> item, Clause where)
                 if (it.first > where.value)
                 {
                     if (hasnt)
-                        PrintHead(col_len);
+                        PrintHead(col_len, item_col);
                     PrintLine(col_len, item_col, it.second);
+                    hasnt = 0;
                 }
             if (!hasnt) PrintTail(col_len);
         }
@@ -329,8 +388,9 @@ void Select(string table_name, vector<string> item, Clause where)
                 if (it.first >= where.value)
                 {
                     if (hasnt)
-                        PrintHead(col_len);
+                        PrintHead(col_len, item_col);
                     PrintLine(col_len, item_col, it.second);
+                    hasnt = 0;
                 }
             if (!hasnt) PrintTail(col_len);
         }
@@ -340,8 +400,9 @@ void Select(string table_name, vector<string> item, Clause where)
                 if (it.first < where.value)
                 {
                     if (hasnt)
-                        PrintHead(col_len);
+                        PrintHead(col_len, item_col);
                     PrintLine(col_len, item_col, it.second);
+                    hasnt = 0;
                 }
             if (!hasnt) PrintTail(col_len);
         }
@@ -351,8 +412,9 @@ void Select(string table_name, vector<string> item, Clause where)
                 if (it.first <= where.value)
                 {
                     if (hasnt)
-                        PrintHead(col_len);
+                        PrintHead(col_len, item_col);
                     PrintLine(col_len, item_col, it.second);
+                    hasnt = 0;
                 }
             if (!hasnt) PrintTail(col_len);
         }
@@ -362,19 +424,27 @@ void Select(string table_name, vector<string> item, Clause where)
                 if (it.first != where.value)
                 {
                     if (hasnt)
-                        PrintHead(col_len);
+                        PrintHead(col_len, item_col);
                     PrintLine(col_len, item_col, it.second);
+                    hasnt = 0;
                 }
             if (!hasnt) PrintTail(col_len);
         }
         else
             std::cerr << "unknown where operator type when Select()" << endl;
     }
+    else std::cerr << "select wrong in both modes" << endl;
 }
 
-void PrintHead(vector<int> col_len)
+/**
+ * @author: fhn
+ * @date: 5/4
+ * @description:  print the upper chart line of a table and the gauge outfit.
+ * @version: 
+*/
+void PrintHead(vector<int> col_len, vector<int> item_col)
 {
-    cout << " ┌"; //───┬───┬───┬───┬───┬───┬───┬───┐
+    cout << " ┌";
     for (int i = 0; i < col_len.size(); i++)
     {
         for (int j = 0; j < col_len[i]; j++) cout << "─";
@@ -383,32 +453,58 @@ void PrintHead(vector<int> col_len)
         else cout << "┐";
     }
     cout << endl;
+
+    cout << " │";
+    for (int i = 0; i < col_len.size(); i++)
+    {
+        int tmp = col_len[i]-cache.col_info_[item_col[i]].first.size();
+        for (int j = 0; j < tmp/2; j++) cout << ' ';
+        if (tmp%2) cout << ' ';
+        cout << cache.col_info_[item_col[i]].first;
+        for (int j = 0; j < tmp/2; j++) cout << ' ';
+        cout << "│";
+    }
+    cout << endl;
 }
 
+/**
+ * @author: fhn
+ * @date: 5/4
+ * @description: in select(), print the body info of table. upper chart line and a row of info
+ * @version:  v2.0 : 
+*/
 void PrintLine(vector<int> col_len, vector<int> item_col, int row_index)
 {
-    cout << "├";
+    cout << " ├";
     for (int i = 0; i < col_len.size(); i++)
     {
         for (int j = 0; j < col_len[i]; j++) cout << "─";
-        if (i <= col_len.size() - 1)
+        if (i < col_len.size() - 1)
              cout << "┼";
         else cout << "┤";
     }
     cout << endl;
-    cout << "│";
+
+    cout << " │";
     for (int i = 0; i < col_len.size(); i++)
-        cout << ios::right << std::setw(col_len[i]) << (cache.GetElem(item_col[i], row_index)).first <<  "│";
+    {
+        int tmp = col_len[i]-(cache.GetElem(item_col[i], row_index)).first.size();
+        for (int j = 0; j < tmp/2; j++) cout << ' ';
+        if (tmp%2) cout << ' ';
+        cout << cache.GetElem(item_col[i], row_index).first;
+        for (int j = 0; j < tmp/2; j++) cout << ' ';
+        cout << "│";
+    }
     cout << endl;
 }
 
 void PrintTail(vector<int> col_len)
 {
-    cout << "└";
+    cout << " └";
     for (int i = 0; i < col_len.size(); i++)
     {
-        for (int j = 0; j < col_len[i]; j++) cout << "─";//──┴───┴───┴───┴───┴───┴───┴───┘"
-        if (i <= col_len.size() - 1)
+        for (int j = 0; j < col_len[i]; j++) cout << "─";
+        if (i < col_len.size() - 1)
             cout << "┴";
         else cout << "┘";
     }
@@ -419,6 +515,8 @@ void PrintTail(vector<int> col_len)
 
 void Update(string table_name, string col_name, string newvalue, Clause where)
 {
+    if (!cur_db.size())
+    { std::cerr << "ERROR 1046 (3D000): No database selected" << endl; return; }
     string file_path = cur_db + "\\" + table_name;
     if (cur_tb != table_name)
     {
@@ -479,6 +577,8 @@ void Update(string table_name, string col_name, string newvalue, Clause where)
 }
 void Delete(string table_name, Clause where)
 {
+    if (!cur_db.size())
+    { std::cerr << "ERROR 1046 (3D000): No database selected" << endl; return; }
     string file_path = cur_db + "\\" + table_name;
     if (cur_tb != table_name)
     {
@@ -527,6 +627,9 @@ void Delete(string table_name, Clause where)
             if (it.first != where.value)
                 cache.EraseElem(it.second);
     }
+    freopen(file_path.c_str(), "w", stdout);
+    cache.PrintInfo();
+    freopen("CON", "w", stdout);
 }
 
 }

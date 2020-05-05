@@ -55,7 +55,7 @@ void Interpret(const std::string& raw)
         case 'd': case 'D':
             sql_itp::Delete(raw);
             break;
-        std::cerr << "sentence syntax went wrong." << std::endl;
+        std::cerr << "sentence syntax went wrong." << std::endl; fflush(stdin);
     }
 }
 
@@ -136,7 +136,8 @@ void Use(const string& src)
 {
     std::regex pattern{"^.*?use.*?(\\w+).*?;", std::regex::icase};
     std::smatch mat;
-    regex_match(src, mat, pattern);
+    if (!regex_match(src, mat, pattern))
+    { std::cerr << "use sentence wrong" << std::endl; return; };
     string tmp = mat[1].str();
     trim(tmp);
     in_out::Use(tmp);
@@ -154,7 +155,7 @@ void Insert(const string& src)
     std::regex pattern{"^.*?insert.*?into.*?(\\w+).*?value.*?[(]\\s*(.*)[)].*?;.*?$", std::regex::icase};
     std::smatch mat;
     if (!regex_match(src, mat, pattern))
-    { std::cerr << "insert command line wrong" << std::endl; return; }
+    { std::cerr << "insert sentence wrong" << std::endl; return; }
     std::string name(mat[1]);
     std::stringstream ss(mat[2]);
     std::vector<string> vec_param;
@@ -176,13 +177,15 @@ void Insert(const string& src)
  * @date: 4/24
  * @description: dealing with select sentence. calling in_out::select.
  *          vec_param: col_names.
- * @version: 1.0
+ * @version: 1.2: regex has been modified from "^.*?select\\s*(.*)\\s*from\\s+(\\w+)\\s+(where.*?)\\s*;.*?$" to 
+ *                                             "^.*?select\\s*(.*)\\s*from\\s+(\\w+)\\s*(where.*?)*\\s*;.*?$"
 */
 void Select(const string& src)
 {
-    std::regex pattern{"^.*?select\\s*(.*)\\s*from\\s+(\\w+)\\s+(where.*?)\\s*;.*?$"};
+    std::regex pattern{"^.*?select\\s*(.*)\\s*from\\s+(\\w+)\\s*(where.*?)*\\s*;.*?$"};
     std::smatch mat;
-    regex_match(src, mat, pattern);
+    if (!regex_match(src, mat, pattern))
+    { std::cout << "select sentence wrong" << std::endl; return;};
     std::string name(mat[2]);
     std::stringstream ss(mat[1]);
     std::vector<string> vec_param;
@@ -201,12 +204,14 @@ void Select(const string& src)
  * @date: 4/25
  * @description: deals with friendly update sentence. output the table_name, col_to_change name, Where clause 
  * @version: 1.0
+ *              v1.1:  * and + make difference!!!
 */
 void Update(const string& src)
 {
-    std::regex pattern{"^.*?update\\s+(\\w+)\\s+set\\s+(.+)\\s+=\\s+(.*?)\\s+(where.*?)\\s+;.*?$", std::regex::icase};
+    std::regex pattern{"^.*?update\\s+(\\w+)\\s+set\\s+(.*?)\\s*=\\s*(.*?)\\s+(where.*?)\\s*;.*?$", std::regex::icase};
     std::smatch mat;
-    regex_match(src, mat, pattern);
+    if (!regex_match(src, mat, pattern))
+    { std::cerr << "update sentence wrong" << std::endl; return;};
     in_out::Update(mat[1].str(), mat[2].str(), mat[3].str(), Where(mat[4].str()));
 }
 
@@ -218,9 +223,10 @@ void Update(const string& src)
 */
 void Delete(const string& src)
 {
-    std::regex pattern{"^.*?delete\\s+from\\s+(\\w+)\\s+(where.*?)\\s+;.*?$", std::regex::icase};
+    std::regex pattern{"^.*?delete\\s+from\\s+(\\w+)\\s+(where.*?)\\s*;.*?$", std::regex::icase};
     std::smatch mat;
-    regex_match(src, mat, pattern);
+    if (!regex_match(src, mat, pattern))
+    { std::cerr << "delete sentence wrong" << std::endl; return; };
     in_out::Delete(mat[1].str(), Where(mat[2].str()));
 }
 
@@ -232,10 +238,11 @@ void Delete(const string& src)
  * @input: a string without front and rear spaces; started with where. 
  *          if a void string in, directly return an obj (0, 0, 0)
  * @version: 1.0
+ *          v1.1: the * and + cause the regex to go wrong, improve the intercommunication of regex function cut the ';'
 */
 Clause Where(const string& src)
 {
-    std::regex pattern{"^.*?where\\s+(\\w+)\\s+(.*?)\\s+(.*?)\\s+;.*?$", std::regex::icase};
+    std::regex pattern{"^.*?where\\s+(\\w+)\\s*(.*?)\\s*(\\w+).*?$", std::regex::icase};
     std::smatch mat;
     if (regex_match(src, mat, pattern))
         return Clause{mat[1].str(), mat[2].str(), mat[3].str()};

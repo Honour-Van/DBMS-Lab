@@ -17,7 +17,7 @@
 int main()
 {
     Interface main;
-    main.Hello();
+    // main.Hello();
     while (true)
     {
         Interpret(main.Input());

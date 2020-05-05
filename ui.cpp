@@ -101,7 +101,7 @@ std::string Interface::Input()
             cout << "    -> ";
     }
 #ifdef _LOC_
-cout << sentence << endl;
+cout << "src sentence was : " << sentence << endl;
 #endif
     if (sentence == "exit;")
         exit_ = true;
