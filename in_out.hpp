@@ -20,6 +20,7 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include <algorithm>
 #include "interpreter.hpp"
 #include "exception.hpp"
 
@@ -92,6 +93,7 @@ public:
     friend void Delete(string table_name, Clause);
 };
 
+bool trim(string &);
 
 void CreateDatabase(const string& name);
 void CreateTable(const string& name, const ColInfo&);
