@@ -74,5 +74,18 @@ insert into table1 values(1, xiaoming);
 
 use test1;
 select*from table1;
+update table1 set id  = 2 where name = xiaofang;
 update table1 set name = 'xiaohua' where name = 'xiaofang';
 
+use test1;
+create table table1(id int, name varchar(20));
+insert into table1 value(1, 'xiaohua');
+insert into table1 value(2, "xiaoh');
+insert into table1 value(2, "xiaoh");
+select*from table1;
+select name, id from table1;
+select name id from table1;
+update table1 set id = 2 where name = xiaohua;
+update table1 set id = 2 where name = 'xiaohong';
+update table1 set id = 3 where name = "xiaohua";
+delete from table1 where name = 'xiaoh';

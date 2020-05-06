@@ -77,14 +77,15 @@ void Table::PrintInfo() const
 std::clog << "table print once" << endl;
 #endif
     cout << col_num_ << ' ' << elem_num_ << endl;
-    int cnt = 0;
     for (int i = 0; i < col_num_; i++)
     {
         cout << col_info_[i].first << ' ' << col_info_[i].second << ' ';
 #ifdef _LOC_
 std::clog << "elem num is " << elem_num_ << "  and before deleting: "<< elem_info_[0].size() << endl;
 #endif
-        for (int j = 0; j < elem_info_[0].size(); j++)
+        int tmp = elem_num() < elem_info_[0].size() ? elem_num() : elem_info_[0].size();
+        // after deleting, use the elem_info[0], if insert is haulting, use elem_num; vector size is quite dangerous, use elem_num is somehow 
+        for (int j = 0; j < tmp; j++)
             if (!isDelete[j])
                 cout << elem_info_[i][j].first << ' ';
         cout << endl;
@@ -207,6 +208,7 @@ void CreateTable(const string& name, const ColInfo& column_info)
     column_info.PrintInfo();// if we want to remain the const of table_info, we should define the print() as const.
     freopen("CON", "w", stdout);
     cout << "Query OK, 0 rows affected ";
+    cout << endl;
 }
 
 /**
@@ -295,16 +297,9 @@ void Insert(string table_name, vector<string> col_name)
         for (int n_col = 0; n_col < cache.col_num(); n_col++)
         {
             if (cache.col_len(n_col) && col_name[n_col].size() > cache.col_len(n_col))
-            {
-                std::cerr  << "Elem to be inserted illegal: too long" << endl << endl; 
-                freopen("CON", "r", stdin); return; 
-            }//if returns here, the data which has been inserted was deprecated. for the elem_num_ remain unchanged.
-            if (cache.col_len(n_col))// if this colomn's type is varchar
-                if (!trim(col_name[n_col]))
-                {
-                    std::cerr << "insert syntax wrong: varchar to be inserted illegal" << endl << endl; 
-                    freopen("CON", "r", stdin); return; 
-                }
+            { std::cerr  << "Elem to be inserted illegal: too long" << endl << endl; cur_tb = ""; return;  }//if returns here, the data which has been inserted was deprecated. for the elem_num_ remain unchanged.
+            if (cache.col_len(n_col) && !trim(col_name[n_col]))
+            { std::cerr << "insert syntax wrong: varchar to be inserted illegal" << endl << endl; cur_tb = ""; return; }//if returns in these two interfaces, we must clear the polluted data.
             cache.AddElem(n_col, cache.elem_num(), col_name[n_col]);
         }
     }
@@ -321,7 +316,7 @@ void Insert(string table_name, vector<string> col_name)
             if (tmp_length && col_name[n_col].size() > tmp_length)
             { 
                 std::cerr  << "Elem to be inserted illegal." << endl; 
-                freopen("CON", "r", stdin); return; 
+                freopen("CON", "r", stdin); cur_tb = ""; return; 
             }//if returns here, the data which has been inserted was deprecated. for the elem_num_ remain unchanged.
             
             cache.AddCol(tmp_name, tmp_length, false);
@@ -391,6 +386,11 @@ std::clog << item[0] << endl;
             if (tmp != -1)
                 item_col[i] = tmp, sel_cnt++;
         }
+    if (sel_cnt == 0)
+    {
+        cout << "empty set" << endl;
+        return;
+    }
 #ifdef _LOC_
 if (item[0] ==  "*")
     for (int i = 0; i < item_col.size(); i++)
@@ -422,11 +422,14 @@ std::clog << sel_cnt << " col(s) selected" << endl;
         int col_base, hasnt = 1;
         col_base = cache.FindCol(where.name); 
         if (col_base == -1)  { std::cerr << "Invalid name in where clause." << endl; return; } //assignment and judge......
+        if (cache.col_len(col_base) && !trim(where.value))
+        { std::cerr << "in Select(): where varchar value wrong" << endl; return; }
+
         for (auto it : where.value)
             if (!isalnum(it))
                 { std::cerr << "Invalid value in where clause." << endl; return; }
 
-        bool (*p)(const string&, const string&);
+        bool (*p)(const string&, const string&);//choose the right mode to act as the cmp function
         
         if (where.op == "=")
             p = equal_to;
@@ -458,7 +461,7 @@ std::clog << sel_cnt << " col(s) selected" << endl;
         else 
         {
             PrintTail(col_len);
-            cout << row_cnt << "rows in set ";
+            cout << row_cnt << "row(s) in set ";
         }
     }
     else std::cerr << "select wrong in both modes" << endl;
@@ -544,7 +547,7 @@ void PrintTail(vector<int> col_len)
 void Update(string table_name, string col_name, string newvalue, Clause where)
 {
     if (!cur_db.size())
-    { std::cerr << "ERROR 1046 (3D000): No database selected" << endl; return; }
+    { std::cerr << "#ERROR 1046 (3D000): No database selected" << endl; return; }
     string file_path = cur_db + "\\" + table_name;
     if (!exist(file_path))
     { std::cerr << "table " << table_name <<" doesn't exists" << endl; return; }
@@ -559,10 +562,14 @@ void Update(string table_name, string col_name, string newvalue, Clause where)
 
     int nc = cache.FindCol(col_name);
     if (nc == -1)  
-    { std::cerr << "col to update invalid" << endl; return;}
+    { std::cerr << "#ERROR in update: col to update invalid" << endl; return;}
+    if (cache.col_len(nc) && !trim(newvalue))
+    { std::cerr << "in in_out::Update(): varchar newvalue wrong" << endl; return; }
     
     int bc = cache.FindCol(where.name);
-    if (bc == -1) { std::cerr << "col to judge (update) invalid " << endl; return; }
+    if (bc == -1) { std::cerr << "#ERROR: col to judge (update) invalid " << endl; return; }
+    if (cache.col_len(bc) && !trim(where.value))
+    { std::cerr << "in Update()'s where clause: varchar value wrong" << endl; return; }
 
     bool (*p)(const string&, const string&);
         
@@ -584,7 +591,7 @@ void Update(string table_name, string col_name, string newvalue, Clause where)
     int row_cnt = 0;
     for (auto it : cache.elem_info_[bc])
             if (p(it.first, where.value))
-                if (cache.GetElem(nc, it.second).first == newvalue)
+                if (cache.GetElem(nc, it.second).first != newvalue)
                     cache.SetElem(nc, it.second, newvalue), row_cnt++;
 
 
@@ -593,15 +600,25 @@ void Update(string table_name, string col_name, string newvalue, Clause where)
     freopen("CON", "w", stdout);
     
     cout << "Query OK, " << row_cnt << " rows affected ";
+    //TimeCount();
+    cout << endl;
     cout << "Rows matched: " << row_cnt << "  Changed: 0  Warnings: 0 ";
+    cout << endl;
 }
+
+/**
+ * @author: fhn
+ * @date: 5/6
+ * @description: executing the deleting action
+ * @version: v3.0
+*/
 void Delete(string table_name, Clause where)
 {
     if (!cur_db.size())
     { std::cerr << "ERROR 1046 (3D000): No database selected" << endl; return; }
     string file_path = cur_db + "\\" + table_name;
     if (!exist(file_path))
-    { std::cerr << "table " << table_name <<" doesn't exists" << endl; return; }
+    { std::cerr << "#ERROR: " << "table " << table_name <<" doesn't exists" << endl; return; }
 
     if (cur_tb != table_name)
     {
@@ -613,9 +630,11 @@ void Delete(string table_name, Clause where)
 
     int bc = cache.FindCol(where.name);
     if (bc == -1) { std::cerr << "col to judge (delete) invalid " << endl; return; }
+    if (cache.col_len(bc) && !trim(where.value))
+    { std::cerr << "in Delete()'s where clause: varchar value wrong"; return; }
+
 
     bool (*p)(const string&, const string&);
-        
     if (where.op == "=")
         p = equal_to;
     else if (where.op == ">")
@@ -633,13 +652,13 @@ void Delete(string table_name, Clause where)
     
     int row_cnt = 0;
     for (auto it : cache.elem_info_[bc])
-            if (it.first == where.value)
+            if (p(it.first,where.value))
                 cache.EraseElem(it.second), row_cnt++;
 
     freopen(file_path.c_str(), "w", stdout);
     cache.PrintInfo();
     freopen("CON", "w", stdout);
-    cur_tb = "";
+    cur_tb = "";//because the elem in cache is quite different from that in the file, we'd better do this.
 
     cout << "Query OK, " << row_cnt << " rows affected ";
 }

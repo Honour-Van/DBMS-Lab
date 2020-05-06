@@ -221,14 +221,11 @@ void Select(const string& src)
 */
 void Update(const string& src)
 {
-    std::regex pattern{"^.*?update\\s+(\\w+)\\s+set\\s+(.*?)\\s*=\\s*(.+)\\s+(where.*?)\\s*;.*?$", std::regex::icase};
+    std::regex pattern{"^.*?update\\s+(\\w+)\\s+set\\s+(.*?)\\s*=\\s*(.+?)\\s+(where.*?)\\s*;.*?$", std::regex::icase};
     std::smatch mat;
     if (!regex_match(src, mat, pattern))
     { std::cerr << "#ERROR: update syntax wrong: whole sentence" << std::endl; return;};
-    string tmp = mat[3].str();
-    if (!in_out::trim(tmp))
-        throw "update new value: varchar format wrong";
-    in_out::Update(mat[1].str(), mat[2].str(), tmp, Where(mat[4].str()));
+    in_out::Update(mat[1].str(), mat[2].str(), mat[3].str(), Where(mat[4].str()));
 }
 
 /**
@@ -258,19 +255,11 @@ void Delete(const string& src)
 */
 Clause Where(const string& src)
 {
-    std::regex pattern1{"^.*?where\\s+(\\w+)\\s*(.*?)\\s*(.+?)\\s*$", std::regex::icase};
-    std::regex pattern2{"^.*?where.*?$", std::regex::icase};
-    std::smatch mat1, mat2;
-    if (!regex_match(src, mat2, pattern2))
-        return Clause();
-    else
-        if (regex_match(src, mat1, pattern1))
-        {
-            string tmp = mat1[3].str();
-            if (!in_out::trim(tmp))
-                throw "#ERROR: where clause varchar value wrong";
-            return Clause{mat1[1].str(), mat1[2].str(), tmp};
-        }
+    std::regex pattern{"^.*?where\\s+(\\w+)\\s*(.+?)\\s*(.+?)\\s*$", std::regex::icase};
+    std::smatch mat;
+    if (regex_match(src, mat, pattern))
+        return Clause{mat[1].str(), mat[2].str(), mat[3].str()};
+    return Clause();
 }
 
 
