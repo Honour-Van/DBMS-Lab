@@ -133,6 +133,9 @@ std::clog << "a col was added" << endl;
 */
 void Table::InitRead()
 {
+    // for (auto it: elem_info_)
+    //     while (!it.empty())
+    //         it.pop_back();
 #ifdef _LOC_
 std::clog << "the table was initialized" << endl;
 #endif
@@ -144,11 +147,13 @@ std::clog << "the table was initialized" << endl;
     for (int i = 0; i < col_num_; i++)
     {
         cin >> tmp_name >> tmp_length;
-        AddCol(tmp_name, tmp_length, 0);
+        col_info_[i].first = tmp_name;
+        col_info_[i].second = tmp_length;
+        elem_info_[i].resize(elem_num());
         for (int j = 0; j < elem_num_; j++)
         {
             cin >> tmp_elem;
-            elem_info_[i].push_back(make_pair(tmp_elem, j));
+            elem_info_[i][j].first = tmp_elem;
         }
     }
 }
@@ -168,6 +173,13 @@ std::clog << "column num was set as "<< col_num << endl;
     elem_info_.resize(col_num);
 }
 
+void Table::SetElemNum(const int elem_num)
+{ 
+    elem_num_ = elem_num; 
+    for (auto it: elem_info_)
+        it.reserve(elem_num*2), it.resize(elem_num); 
+}
+
 /**
  * @author: fhn
  * @date: 4/27
@@ -181,6 +193,9 @@ std::clog << "vector[" << col_no << "] was added with elem. now  elem_num  is " 
 #endif
     isDelete.push_back(false);
     elem_info_[col_no].push_back(make_pair(elem, index_num));
+#ifdef _TEST5_
+std::clog << "vector[" << col_no << "] was added with " << elem << ". now  elem_num  is " <<  index_num + 1  << endl;
+#endif
 }
 
 void Table::EraseElem(const int& id)
@@ -302,6 +317,18 @@ void Table::ClearError(int row_num, int err_col)
         elem_info_[i].erase(elem_info_[i].begin()+row_num);
 }
 
+#ifdef _TEST5_
+void WATCH()
+{
+    for (int i = 0; i < cache.elem_info_.size(); i++)
+    {
+        for(int j = 0; j < cache.elem_info_[i].size(); j++)
+            std::clog << cache.elem_info_[i][j].first << ' ';
+        cout << std::endl;
+    }
+}
+#endif
+
 /**
  * @author: fhn
  * @date: 4/26
@@ -325,21 +352,21 @@ void Insert(string table_name, vector<string> col_name)
     {
         cache.SetColNum(cache.col_num());
         if (cache.col_num() != col_name.size())
-        { std::cerr << "#ERROR in insert: param num not fit" << endl; return;}
+        { std::cerr << "#ERROR in insert: param num not fit" << endl; cur_tb = ""; return;}
         for (int n_col = 0; n_col < cache.col_num(); n_col++)
         {
-            if (cache.col_len(n_col) && col_name[n_col].size() > cache.col_len(n_col))
-            { 
-                std::cerr  << "Elem to be inserted illegal: too long" << endl << endl; 
-                cur_tb = ""; cache.ClearError(cache.elem_num()+1, n_col);
-                return;
-            }//if returns here, the data which has been inserted was deprecated. for the elem_num_ remain unchanged.
             if (cache.col_len(n_col) && !trim(col_name[n_col]))
             { 
                 std::cerr << "insert syntax wrong: varchar to be inserted illegal" << endl << endl; 
                 cur_tb = ""; cache.ClearError(cache.elem_num()+1, n_col);
                 return;
             }//if returns in these two interfaces, we must clear the polluted data.
+            if (cache.col_len(n_col) && col_name[n_col].size() > cache.col_len(n_col))
+            { 
+                std::cerr  << "Elem to be inserted illegal: too long" << endl << endl; 
+                cur_tb = ""; cache.ClearError(cache.elem_num()+1, n_col);
+                return;
+            }//if returns here, the data which has been inserted was deprecated. for the elem_num_ remain unchanged.
             cache.AddElem(n_col, cache.elem_num(), col_name[n_col]);
         }
     }
@@ -353,19 +380,13 @@ void Insert(string table_name, vector<string> col_name)
         for (int n_col = 0; n_col < cache.col_num(); n_col++)
         {
             cin >> tmp_name >> tmp_length;
-            if (tmp_length && col_name[n_col].size() > tmp_length)
-            { 
-                std::cerr  << "Elem to be inserted illegal: too long" << endl; 
-                freopen("CON", "r", stdin); cur_tb = ""; 
-                cache.ClearError(cache.elem_num()+1, n_col);
-                return; 
-            }//if returns here, the data which has been inserted was deprecated. for the elem_num_ remain unchanged.
             
-            cache.AddCol(tmp_name, tmp_length, false);
+            cache.col_info_[n_col].first = tmp_name;
+            cache.col_info_[n_col].second = tmp_length;
             for (int j = 0; j < cache.elem_num(); j++)
             {
                 cin >> tmp_elem;
-                cache.AddElem(n_col, j, tmp_elem);
+                cache.SetElem(n_col, j, tmp_elem);
             }
             string c = col_name[n_col];
             if (cache.col_len(n_col))// if this colomn's type is varchar
@@ -376,7 +397,15 @@ void Insert(string table_name, vector<string> col_name)
                     cache.ClearError(cache.elem_num()+1, n_col);
                     return;
                 }
-            cache.AddElem(n_col, cache.elem_num(), c);
+            if (tmp_length && col_name[n_col].size() > tmp_length)
+            { 
+                std::cerr  << "Elem to be inserted illegal: too long" << endl; 
+                freopen("CON", "r", stdin); cur_tb = ""; 
+                cache.ClearError(cache.elem_num()+1, n_col);
+                return; 
+            }//if returns here, the data which has been inserted was deprecated. for the elem_num_ remain unchanged.
+            cache.elem_info_[n_col].resize(cache.elem_num()+1);
+            cache.elem_info_[n_col][cache.elem_num()].first = c;
         }
         cur_tb = table_name;// renew only when everything is right.
     }
@@ -388,7 +417,11 @@ void Insert(string table_name, vector<string> col_name)
     freopen("CON", "w", stdout);
     cout << "Query OK, 1 row affected ";
     time_cnt::end(); cout << endl;
+#ifdef _TEST5_
+    WATCH();
+#endif
 }
+
 
 /**
  * @author: fhn
@@ -447,9 +480,10 @@ std::clog << sel_cnt << " col(s) selected" << endl;
     vector<int> col_len(sel_cnt);
     for (int i = 0; i < sel_cnt; i++)
     {
-        int tmp = cache.col_info_[item_col[i]].second;
-        if (tmp) col_len[i] = tmp;
-        else col_len[i] = 10;
+        if (!cache.col_info_[item_col[i]].second) 
+            col_len[i] = 10;
+        else col_len[i] = (cache.col_info_[item_col[i]].first.size() > cache.col_info_[item_col[i]].second
+                        ?  cache.col_info_[item_col[i]].first.size() : cache.col_info_[item_col[i]].second) + 1;
     }
 
     //select rows to be put
@@ -514,6 +548,9 @@ std::clog << sel_cnt << " col(s) selected" << endl;
         time_cnt::end(); cout << endl;
     }
     else std::cerr << "select wrong in both modes" << endl;
+#ifdef _TEST5_
+    WATCH();
+#endif
 }
 
 /**

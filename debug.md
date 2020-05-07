@@ -177,3 +177,16 @@ id 0
 name 20
 ```
 
+## test5
+vector is a dangerous container: its push_back and size() during cases prevails
+```sql
+use test1;
+select*from table1;
+select*from table2;
+```
+### insert retest
+```sql
+insert into table2 value(2, 'wdnmd', 'xxxxxxx');
+insert into table2 value(2, 'wdnmd', 'xx');
+select*from table2;
+```

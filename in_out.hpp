@@ -58,7 +58,7 @@ public:
     int col_num() const { return col_num_; }
     int col_len(int col) const { return col_info_[col].second; }
     int FindCol(const string&); //O(n)
-    virtual void SetColNum(int col_num) { col_num_ = col_num;}
+    virtual void SetColNum(int col_num) { col_num_ = col_num; col_info_.resize(col_num);}
     virtual void PrintInfo() const;
 };
 
@@ -82,7 +82,7 @@ public:
     std::pair<string, int> GetElem(int col, int row)const { return elem_info_[col][row]; }
     
     void SetElem(int col, int row, string newval) { elem_info_[col][row].first = newval; }
-    void SetElemNum(const int elem_num) { elem_num_ = elem_num;}
+    void SetElemNum(const int elem_num);
     void SetColNum (const int col_num );
     void EraseElem(const int& id);
     void ClearError(int, int);
@@ -90,9 +90,13 @@ public:
     void InitRead();
     void PrintInfo() const;
     
+    friend void Insert(string, std::vector<string>);
     friend void Select(string, std::vector<string>, Clause);
     friend void Update(string table_name, string col_name, string newvalue, Clause);
     friend void Delete(string table_name, Clause);
+#ifdef _TEST5_
+    friend void WATCH();
+#endif
 };
 
 bool trim(string &);

@@ -61,6 +61,7 @@ void Interpret(const std::string& raw)
 #ifdef _LOC_
 std::clog << "finished once" << std::endl;
 #endif
+    fflush(stdin);
 }
 
 
