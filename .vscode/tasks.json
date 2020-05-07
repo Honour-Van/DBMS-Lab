@@ -6,7 +6,6 @@
             "args": [
                 "-g",
                 "main.cpp",
-                "-D _LOC_",
                 "-include",
                 "${workspaceRoot}\\.vscode\\head.h",
                 "ui.cpp",

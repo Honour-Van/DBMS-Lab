@@ -36,6 +36,7 @@ void Interpret(const std::string& raw)
     ss >> judge;
     switch(judge[0])
     {
+
         case 'c': case 'C':
             ss >> judge;
             sql_itp::Create(judge[0], raw);
@@ -105,7 +106,7 @@ void Create(char mode, const string& src)
                                 //table name must be in the alphas, nums and '_'
         std::smatch mat;
         if (!regex_match(src, mat, pattern))
-        { std::cerr << "create table : syntax wrong"; return;}//mat[1] is tablename, mat[2] is the param of columns.
+        { std::cerr << "create table : syntax wrong" << std::endl; return;}//mat[1] is tablename, mat[2] is the param of columns.
     #ifdef _LOC_
         else 
     std::clog << "create table matched" << std::endl;
@@ -192,10 +193,11 @@ void Insert(const string& src)
  *          vec_param: col_names.
  * @version: 1.2: regex has been modified from "^.*?select\\s*(.*)\\s*from\\s+(\\w+)\\s+(where.*?)\\s*;.*?$" to 
  *                                             "^.*?select\\s*(.*)\\s*from\\s+(\\w+)\\s*(where.*?)*\\s*;.*?$"
+ *           v3.0: in test4, we found the regex is wrong with the where clause
 */
 void Select(const string& src)
 {
-    std::regex pattern{"^.*?select\\s*(.*)\\s*from\\s+(\\w+)\\s*(where.*?)*.*?;.*?$"};
+    std::regex pattern{"^.*?select\\s*(.*)\\s*from\\s+(\\w+)\\s*(where.*?)*\\s*;.*?$"};
     std::smatch mat;
     if (!regex_match(src, mat, pattern))
     { std::cout << "#ERROR: select syntax wrong: whole sentence" << std::endl; return;};
@@ -255,7 +257,7 @@ void Delete(const string& src)
 */
 Clause Where(const string& src)
 {
-    std::regex pattern{"^.*?where\\s+(\\w+)\\s*(.+?)\\s*(.+?)\\s*$", std::regex::icase};
+    std::regex pattern{"^.*?where\\s+(\\w+)\\s*([><=!]{1,2})\\s*(.+?)\\s*$", std::regex::icase};
     std::smatch mat;
     if (regex_match(src, mat, pattern))
         return Clause{mat[1].str(), mat[2].str(), mat[3].str()};

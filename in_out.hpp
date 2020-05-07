@@ -23,6 +23,7 @@
 #include <algorithm>
 #include "interpreter.hpp"
 #include "exception.hpp"
+#include "time_cnt.hpp"
 
 //--------------------------------------------------------------------------------------------
 
@@ -84,6 +85,7 @@ public:
     void SetElemNum(const int elem_num) { elem_num_ = elem_num;}
     void SetColNum (const int col_num );
     void EraseElem(const int& id);
+    void ClearError(int, int);
 
     void InitRead();
     void PrintInfo() const;
