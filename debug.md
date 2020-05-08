@@ -90,6 +90,7 @@ update table1 set name = 'xiaohua' where name = 'xiaofang';
 ```
 
 ```sql
+create database test1;
 use test1;
 create table table1(id int, name varchar(20));
 insert into table1 value(1, 'xiaohua');

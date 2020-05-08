@@ -88,7 +88,7 @@ std::clog << "elem num is " << elem_num_ << "  and before deleting: "<< elem_inf
         // int tmp = elem_num() < elem_info_[0].size() ? elem_num() : elem_info_[0].size();
         // after deleting, use the elem_info[0], if insert is haulting, use elem_num; vector size is quite dangerous, use elem_num is somehow 
         int tmp = elem_num();
-#ifdef _TEST4_//the rang is very strange, so we spent lots of time on it.
+#ifdef _TEST5_//the rang is very strange, so we spent lots of time on it.
 std::clog << "print info: " << tmp << endl;
 int dcnt = 0;
 for (int i = 0; i < isDelete.size(); i++)
@@ -387,7 +387,6 @@ void Insert(string table_name, vector<string> col_name)
         int tmp_num;
         cin >> tmp_num; cache.SetColNum (tmp_num);
         cin >> tmp_num; cache.SetElemNum(tmp_num);
-        
         string tmp_name; int tmp_length; string tmp_elem;
         for (int n_col = 0; n_col < cache.col_num(); n_col++)
         {
@@ -423,15 +422,16 @@ void Insert(string table_name, vector<string> col_name)
     }
     freopen("CON", "r", stdin);
     cache.SetElemNum(cache.elem_num()+1);
-    
+    cache.isDelete.resize(cache.elem_num_ * 2);
+
+#ifdef _TEST5_
+    WATCH();
+#endif
     freopen(file_path.c_str(), "w", stdout);
     cache.PrintInfo();
     freopen("CON", "w", stdout);
     cout << "Query OK, 1 row affected ";
     time_cnt::end(); cout << endl;
-#ifdef _TEST5_
-    WATCH();
-#endif
 }
 
 

@@ -26,7 +26,7 @@ int main()
         Interpret(main.Input());
     } catch (std::exception& e){
         using namespace std;
-        cout << "#ERROR " << e.what() << endl;
+        cout << "#ERROR " << e.what() << endl<< endl;
 #ifdef _TEST5_
 clog << std::cin.eof() << " " << std::cin.bad() << " " << std::cin.fail() << std::endl;
 #endif
