@@ -20,6 +20,8 @@ namespace time_cnt{
     void Sleep1();
     void Sleep2();
     void Sleep3();
+    void Sleep4();
+    void Sleep5();
     void start();
     void end();
 }

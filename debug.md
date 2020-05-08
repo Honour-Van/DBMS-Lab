@@ -190,3 +190,10 @@ insert into table2 value(2, 'wdnmd', 'xxxxxxx');
 insert into table2 value(2, 'wdnmd', 'xx');
 select*from table2;
 ```
+### create table retest
+```sql
+use test1;
+create table table3(id Int, name varchar(20));
+create table table3(id int, name varchar);
+create table table3(id int, name varchar(20));
+```

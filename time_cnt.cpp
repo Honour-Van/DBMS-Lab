@@ -8,6 +8,8 @@ namespace time_cnt
 * @version: 1.0
 * @description: three modes of sleeping of different time span, 
                 this is the substitution for sleep() in "Windows.h", in order to guaratee the protability between windows, linux and mac.
+
+                sleep1: INT_MAX/10
 */
 void Sleep1()
 {
@@ -15,16 +17,30 @@ void Sleep1()
     while (++i <= bound);
 }
 
+//sleep2: INT_MAX/15
 void Sleep2()
 {
     int i = 0, bound = INT_MAX/15;
     while (++i <= bound);
 }
 
+//sleep3: INT_MAX/27
 void Sleep3()
 {
     int i = 0, bound = INT_MAX/27;
     while (++i <= bound);
+}
+
+void Sleep4()
+{
+    int i = 0, bound = INT_MAX/80;
+    while (++i <= bound);
+}
+
+void Sleep5()
+{
+    int i = 0, bound = INT_MAX/50;
+    while(++i <= bound);
 }
 
 clock_t s, e;

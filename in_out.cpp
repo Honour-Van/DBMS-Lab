@@ -62,7 +62,7 @@ int ColInfo::FindCol(const string & name)
         if ((*it).first == name)
             return it - col_info_.begin();
     }
-    std::cerr << "col not found" << endl;
+    error("col not found");
     return -1;
 }
 
@@ -95,15 +95,20 @@ for (int i = 0; i < isDelete.size(); i++)
     if (isDelete[i])
         std::clog << "isDelete[" << i << "] is true; " << endl;
 #endif
+#ifdef _TEST5_//the rang is very strange, so we spent lots of time on it.
+std::clog << "print info: " << tmp << endl;
+#endif
+
         for (int j = 0; j < tmp; j++)
             if (!isDelete[j])
             {
                 cout << elem_info_[i][j].first << ' ';
-#ifdef _TEST4_
+#ifdef _TEST5_
 std::clog << "print info: " << tmp << endl;
 #endif
             }
-            else if (j == 0) tmp++;
+            // else if (j == 0) tmp++;
+            else tmp++;
         cout << endl;
     }
 }
@@ -140,6 +145,7 @@ void Table::InitRead()
 std::clog << "the table was initialized" << endl;
 #endif
     cin >> col_num_ >> elem_num_;
+    Break();
     string tmp_name; int tmp_length; string tmp_elem;
     
     SetColNum(col_num_);
@@ -147,13 +153,19 @@ std::clog << "the table was initialized" << endl;
     for (int i = 0; i < col_num_; i++)
     {
         cin >> tmp_name >> tmp_length;
+#ifdef _TEST5_
+std::clog << cin.eof() << " " << cin.bad() << " " << cin.fail() << std::endl;
+#endif
+        Break();
         col_info_[i].first = tmp_name;
         col_info_[i].second = tmp_length;
         elem_info_[i].resize(elem_num());
         for (int j = 0; j < elem_num_; j++)
         {
             cin >> tmp_elem;
+            Break();
             elem_info_[i][j].first = tmp_elem;
+            elem_info_[i][j].second = j;
         }
     }
 }
@@ -200,7 +212,7 @@ std::clog << "vector[" << col_no << "] was added with " << elem << ". now  elem_
 
 void Table::EraseElem(const int& id)
 {
-#ifdef _TEST4_
+#ifdef _TEST5_
 std::clog << "the "<< id << "th elem was erased" << endl;
 #endif
     if (isDelete[id]) return;
@@ -218,10 +230,12 @@ std::clog << "the "<< id << "th elem was erased" << endl;
 void CreateDatabase(const string& name)
 {
     string mkdir = "mkdir " + name;
-    system(mkdir.c_str());
-    cout << "Query OK, 1 row affected ";
-    time_cnt::end();
-    cout << endl;
+    if (!system(mkdir.c_str()))
+    { 
+        cout << "Query OK, 1 row affected ";
+        time_cnt::end();
+        cout << endl;
+    }
 }
 
 /**
@@ -233,10 +247,10 @@ void CreateDatabase(const string& name)
 void CreateTable(const string& name, const ColInfo& column_info)
 {
     if (cur_db.size() == 0) 
-    { std::cerr << "#ERROR: no database in use" << endl; return; }
+    { error("No database selected"); return; }
     string file_path = cur_db + "\\" + name;
     if (exist(file_path))
-    { std::cerr << "#ERROR: file already exists" << endl; return;}
+    { error("file already exists"); return;}
     freopen(file_path.c_str(), "w", stdout);
     column_info.PrintInfo();// if we want to remain the const of table_info, we should define the print() as const.
     freopen("CON", "w", stdout);
@@ -254,8 +268,6 @@ void CreateTable(const string& name, const ColInfo& column_info)
 void Use(string name)
 {
     string tmp = "cd " + name;
-    // if (cur_db == name)
-    // { std::cerr << "database already in use." << endl; }
     if (!system(tmp.c_str()))//if the folder doesn't exist, system will warns.
     {    
         cur_db = name;
@@ -274,12 +286,12 @@ bool trim(string & str)
         return false;
     else if (pos1 != string::npos && pos2 != string::npos)
         return false;
-    else if (pos1 != string::npos)
+    else if (pos1 != string::npos && pos1 == 0)
     {
         //erase the first and last "
         str.erase(pos1, 1);
         pos1 = str.find_first_of("\"");
-        if (pos1 != string::npos)
+        if (pos1 != string::npos && pos1 == str.size()-1)
             str.erase(pos1, 1);
         else return false;
         
@@ -288,12 +300,12 @@ bool trim(string & str)
             if (!isalnum(it))
                 return false;
     }
-    else if (pos2 != string ::npos)
+    else if (pos2 != string ::npos && pos2 == 0)
     {
         //erase the first and last "
         str.erase(pos2, 1);
         pos2 = str.find_last_of("\'");
-        if (pos2 != string::npos)
+        if (pos2 != string::npos && pos2 == str.size()-1)
             str.erase(pos2, 1);
         else return false;
 
@@ -343,27 +355,27 @@ void WATCH()
 void Insert(string table_name, vector<string> col_name)
 {
     if (!cur_db.size())
-    { std::cerr << "no database used" << endl; return;}
+    { error("no database used"); return;}
     string file_path = cur_db + "\\" + table_name;//default
     if (!exist(file_path))
-    { std::cerr << "table " << table_name <<" doesn't exists" << endl; return; }
+    { error("table ", table_name, " doesn't exists"); return; }
 
     if (cur_tb == table_name) // to use cache to just insert into cache
     {
         cache.SetColNum(cache.col_num());
         if (cache.col_num() != col_name.size())
-        { std::cerr << "#ERROR in insert: param num not fit" << endl; cur_tb = ""; return;}
+        { error("in insert: param num not fit"); cur_tb = ""; return;}
         for (int n_col = 0; n_col < cache.col_num(); n_col++)
         {
             if (cache.col_len(n_col) && !trim(col_name[n_col]))
             { 
-                std::cerr << "insert syntax wrong: varchar to be inserted illegal" << endl << endl; 
+                error("insert syntax wrong: varchar to be inserted illegal"); 
                 cur_tb = ""; cache.ClearError(cache.elem_num()+1, n_col);
                 return;
             }//if returns in these two interfaces, we must clear the polluted data.
             if (cache.col_len(n_col) && col_name[n_col].size() > cache.col_len(n_col))
             { 
-                std::cerr  << "Elem to be inserted illegal: too long" << endl << endl; 
+                error("Elem to be inserted illegal: too long"); 
                 cur_tb = ""; cache.ClearError(cache.elem_num()+1, n_col);
                 return;
             }//if returns here, the data which has been inserted was deprecated. for the elem_num_ remain unchanged.
@@ -381,7 +393,7 @@ void Insert(string table_name, vector<string> col_name)
         {
             cin >> tmp_name >> tmp_length;
             
-            cache.col_info_[n_col].first = tmp_name;
+            cache.col_info_[n_col].first = tmp_name;//don't try to use add col: just here, for the cache needs to be cleared.
             cache.col_info_[n_col].second = tmp_length;
             for (int j = 0; j < cache.elem_num(); j++)
             {
@@ -392,14 +404,14 @@ void Insert(string table_name, vector<string> col_name)
             if (cache.col_len(n_col))// if this colomn's type is varchar
                 if (!trim(c))
                 { 
-                    std::cerr << "insert syntax wrong: varchar to be inserted illegal" << endl << endl;
+                    error("insert syntax wrong: varchar to be inserted illegal");
                     freopen("CON", "r", stdin); 
                     cache.ClearError(cache.elem_num()+1, n_col);
                     return;
                 }
             if (tmp_length && col_name[n_col].size() > tmp_length)
             { 
-                std::cerr  << "Elem to be inserted illegal: too long" << endl; 
+                error("Elem to be inserted illegal: too long"); 
                 freopen("CON", "r", stdin); cur_tb = ""; 
                 cache.ClearError(cache.elem_num()+1, n_col);
                 return; 
@@ -434,10 +446,10 @@ void Insert(string table_name, vector<string> col_name)
 void Select(string table_name, vector<string> item, Clause where)
 {
     if (!cur_db.size())
-    { std::cerr << "ERROR 1046 (3D000): No database selected" << endl; return; }
+    { error("1046 (3D000): No database selected"); return; }
     string file_path = cur_db + "\\" + table_name;
     if (!exist(file_path))
-    { std::cerr << "table " << table_name <<" doesn't exists" << endl; return; }
+    { error("table ", table_name, " doesn't exists"); return; }
 #ifdef _TEST4_
 std::clog << "current table name is " << cur_tb << endl;
 #endif
@@ -503,13 +515,13 @@ std::clog << sel_cnt << " col(s) selected" << endl;
     {    
         int col_base, hasnt = 1;
         col_base = cache.FindCol(where.name); 
-        if (col_base == -1)  { std::cerr << "Invalid name in where clause." << endl; return; } //assignment and judge......
+        if (col_base == -1)  { error("Invalid name in where clause."); return; } //assignment and judge......
         if (cache.col_len(col_base) && !trim(where.value))
-        { std::cerr << "in Select(): where varchar value wrong" << endl; return; }
+        { error("in Select(): where varchar value wrong"); return; }
 
         for (auto it : where.value)
             if (!isalnum(it))
-                { std::cerr << "Invalid value in where clause." << endl; return; }
+                { error("Invalid value in where clause."); return; }
 
         bool (*p)(const string&, const string&);//choose the right mode to act as the cmp function
         
@@ -526,7 +538,7 @@ std::clog << sel_cnt << " col(s) selected" << endl;
         else if (where.op == "!=")
             p = not_equal_to;
         else
-            std::cerr << "unknown where operator type when Select()" << endl;
+            error("unknown where operator type when Select()");
 
         int row_cnt = 0;
         for (auto it : cache.elem_info_[col_base])
@@ -547,7 +559,7 @@ std::clog << sel_cnt << " col(s) selected" << endl;
         }
         time_cnt::end(); cout << endl;
     }
-    else std::cerr << "select wrong in both modes" << endl;
+    else error("select wrong in both modes");
 #ifdef _TEST5_
     WATCH();
 #endif
@@ -638,10 +650,10 @@ void PrintTail(vector<int> col_len)
 void Update(string table_name, string col_name, string newvalue, Clause where)
 {
     if (!cur_db.size())
-    { std::cerr << "#ERROR 1046 (3D000): No database selected" << endl; return; }
+    { error("1046 (3D000): No database selected"); return; }
     string file_path = cur_db + "\\" + table_name;
     if (!exist(file_path))
-    { std::cerr << "#ERROR in Update(): table " << table_name <<" doesn't exists" << endl; return; }
+    { error("in Update(): Table ", table_name, " doesn't exists"); return; }
 
     if (cur_tb != table_name)
     {
@@ -655,14 +667,14 @@ cout << "in update: " << "table_name: " << table_name << "cur_tb: " << cur_tb <<
 #endif
     int nc = cache.FindCol(col_name);
     if (nc == -1)  
-    { std::cerr << "#ERROR in Update(): col to update invalid" << endl; return;}
+    { error("in Update(): col to update invalid"); return;}
     if (cache.col_len(nc) && !trim(newvalue))
-    { std::cerr << "#ERROR in Update(): varchar newvalue wrong" << endl; return; }
+    { error("#ERROR in Update(): varchar newvalue wrong"); return; }
     
     int bc = cache.FindCol(where.name);
-    if (bc == -1) { std::cerr << "#ERROR: col to judge (update) invalid " << endl; return; }
+    if (bc == -1) { error("#ERROR: col to judge (update) invalid "); return; }
     if (cache.col_len(bc) && !trim(where.value))
-    { std::cerr << "in Update()'s where clause: varchar value wrong" << endl; return; }
+    { error("in Update()'s where clause: varchar value wrong"); return; }
 
     bool (*p)(const string&, const string&);
         
@@ -679,7 +691,7 @@ cout << "in update: " << "table_name: " << table_name << "cur_tb: " << cur_tb <<
     else if (where.op == "!=")
         p = not_equal_to;
     else
-        std::cerr << "unknown where operator type when Select()" << endl;
+        error("unknown where operator type when Select()");
 
     int row_cnt = 0;
     for (auto it : cache.elem_info_[bc])
@@ -709,10 +721,10 @@ cout << "in update: " << "table_name: " << table_name << "cur_tb: " << cur_tb <<
 void Delete(string table_name, Clause where)
 {
     if (!cur_db.size())
-    { std::cerr << "ERROR 1046 (3D000): No database selected" << endl; return; }
+    { error("1046 (3D000): No database selected"); return; }
     string file_path = cur_db + "\\" + table_name;
     if (!exist(file_path))
-    { std::cerr << "#ERROR: " << "table " << table_name <<" doesn't exists" << endl; return; }
+    { error("table ", table_name, " doesn't exists"); return; }
 #ifdef _TEST4_
 cout << "in delete: " << "table_name: " << table_name << " cur_tb: " << cur_tb << endl;
 #endif
@@ -726,9 +738,9 @@ cout << "in delete: " << "table_name: " << table_name << " cur_tb: " << cur_tb <
     }
 
     int bc = cache.FindCol(where.name);
-    if (bc == -1) { std::cerr << "#ERROR in Delete(): col to judge (delete) invalid " << endl; return; }
+    if (bc == -1) { error("in Delete(): col to judge (delete) invalid "); return; }
     if (cache.col_len(bc) && !trim(where.value))
-    { std::cerr << "#ERROR in Delete()'s where: varchar value wrong" << endl; return; }
+    { error("in Delete()'s where: varchar value wrong"); return; }
 
 
     bool (*p)(const string&, const string&);
@@ -745,7 +757,7 @@ cout << "in delete: " << "table_name: " << table_name << " cur_tb: " << cur_tb <
     else if (where.op == "!=")
         p = not_equal_to;
     else
-        std::cerr << "unknown where operator type when Select()" << endl;
+        error("unknown where operator type when Select()");
     
     int row_cnt = 0;
     for (auto it : cache.elem_info_[bc])
@@ -755,7 +767,7 @@ cout << "in delete: " << "table_name: " << table_name << " cur_tb: " << cur_tb <
     freopen(file_path.c_str(), "w", stdout);
     cache.PrintInfo();
     freopen("CON", "w", stdout);
-    
+
     cur_tb = "";//because the elem in cache is quite different from that in the file, we'd better do this.
     for (auto it : cache.isDelete)
         it = false;
