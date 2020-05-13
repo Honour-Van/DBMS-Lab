@@ -12,11 +12,6 @@
 
 //--------------------------------------------------------------------------------------------
 
-#include <sstream>
-#include <string>
-#include <vector>
-#include <regex>
-#include <cctype>
 #include "interpreter.hpp"
 
 //--------------------------------------------------------------------------------------------
@@ -56,12 +51,11 @@ void Interpret(const std::string& raw)
         case 'd': case 'D':
             sql_itp::Delete(raw);
             break;
-        error("sentence syntax went wrong."); fflush(stdin);
+        error("sentence syntax went wrong."); 
     }
 #ifdef _LOC_
 std::clog << "finished once" << std::endl;
 #endif
-    fflush(stdin);
 }
 
 
@@ -99,7 +93,8 @@ void Create(char mode, const string& src)
     {
         std::regex pattern{"^.*?create.*?database.*?(\\w+).*?;$", std::regex::icase};
         std::smatch mat;
-        regex_match(src, mat, pattern);
+        if (!regex_match(src, mat, pattern))
+        { error("create database : syntax wrong"); return; }
         in_out::CreateDatabase(mat[1]);
     }
     else if (mode == 't' || mode == 'T')// 
@@ -150,7 +145,7 @@ std::clog << "create table prepared" << std::endl << std::endl;
 #endif
         in_out::CreateTable(mat[1], param);
     }
-    else error("#ERROR: create table mode wrong.");
+    else error("create table mode wrong.");
 }
 
 /**
@@ -209,7 +204,7 @@ void Insert(const string& src)
 */
 void Select(const string& src)
 {
-    std::regex pattern{"^.*?select\\s*(.*)\\s*from\\s+(\\w+)\\s*(where.*?)*\\s*;.*?$"};
+    std::regex pattern{"^.*?select\\s*(.*)\\s*from\\s+(\\w+)\\s*(where.*?)*\\s*;.*?$", std::regex::icase};
     std::smatch mat;
     if (!regex_match(src, mat, pattern))
     { error("select syntax wrong: whole sentence"); return;};

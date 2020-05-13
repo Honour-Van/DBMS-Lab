@@ -15,6 +15,7 @@
 
 //--------------------------------------------------------------------------------------------
 
+extern bool broken;
 
 namespace in_out{
     using std::cin;
@@ -28,6 +29,8 @@ namespace in_out{
 
 string cur_db; // used for indicating the current database, called in use sentence.
 string cur_tb; // used for indicating the current table, if doesn't change, edit directly in cache.
+vector<string> dbs; bool dbs_flag = false;
+
 
 Table cache;
 
@@ -229,13 +232,32 @@ std::clog << "the "<< id << "th elem was erased" << endl;
 */
 void CreateDatabase(const string& name)
 {
-    string mkdir = "mkdir " + name;
-    if (!system(mkdir.c_str()))
-    { 
-        cout << "Query OK, 1 row affected ";
-        time_cnt::end();
-        cout << endl;
+    if (!dbs_flag)
+    {
+        freopen("dbs_info", "r", stdin);
+        string tmp;
+        while (cin >> tmp)
+            dbs.push_back(tmp);
+        freopen("CON", "r", stdin);
+        dbs_flag = true;
     }
+    auto it = find(dbs.begin(), dbs.end(), name);
+    if (it != dbs.end())
+        error("subdirectory ", name," already exists.");
+    else if (it == dbs.end())
+    {
+        string mkdir = "mkdir " + name;
+        //system(mkdir.c_str());
+        cout << "Query OK, 1 row affected ";
+        freopen("CON", "w", stdout);
+        dbs.push_back(name);
+        time_cnt::end();
+        cout << "\n";
+    }
+    freopen("dbs_info", "w", stdout);
+    for (auto it: dbs)
+        cout << it << ' ';
+    freopen("CON", "w", stdout);
 }
 
 /**
@@ -267,13 +289,28 @@ void CreateTable(const string& name, const ColInfo& column_info)
 */
 void Use(string name)
 {
-    string tmp = "cd " + name;
-    if (!system(tmp.c_str()))//if the folder doesn't exist, system will warns.
-    {    
-        cur_db = name;
-        cur_tb = "";
-        cout << "Database changed" << endl;
+    if (!dbs_flag)
+    {
+        freopen("dbs_info", "r", stdin);
+        string tmp;
+        while (cin >> tmp)
+            dbs.push_back(tmp);
+        freopen("CON", "r", stdin);
+        dbs_flag = true;
     }
+    auto it = find(dbs.begin(), dbs.end(), name);
+    if (it != dbs.end())
+    {
+        string tmp = "cd " + name;
+        cur_db = name; cur_tb = "";
+        cout << "Database changed\n";
+        freopen("dbs_info", "w", stdout);
+        for (auto it: dbs)
+            cout << it << ' ';
+        freopen("CON", "w", stdout);
+    }
+    else 
+        error("No such subdirectory");
 }
 
 //--------------------------------------------------------------------------------------------
@@ -458,11 +495,14 @@ std::clog << "current table name is " << cur_tb << endl;
         freopen(file_path.c_str(), "r", stdin);
         cache.InitRead();
         freopen("CON", "r", stdin); //here we didn't get the stdin back, which caused a bad loops
+        if (broken)
+        { cur_tb = ""; error("Data broken"); return;}
         cur_tb = table_name;//evething has been put in, then renew;(somehow different from the Insert()): possibly because we need to output once a time
     }
 #ifdef _LOC_
 std::clog << "current table name is " << cur_tb << endl;
 #endif
+
     //select columns to be put
     vector<int> item_col(cache.col_num()); int tmp, sel_cnt = 0;
 
@@ -660,6 +700,8 @@ void Update(string table_name, string col_name, string newvalue, Clause where)
         freopen(file_path.c_str(), "r", stdin);
         cache.InitRead();
         freopen("CON", "r", stdin);
+        if (broken)
+        { cur_tb = ""; error("Data broken"); return;}
         cur_tb = table_name;
     }
 #ifdef _TEST4_
@@ -734,6 +776,8 @@ cout << "in delete: " << "table_name: " << table_name << " cur_tb: " << cur_tb <
         freopen(file_path.c_str(), "r", stdin);
         cache.InitRead();
         freopen("CON", "r", stdin);
+        if (broken)
+        { cur_tb = ""; error("Data broken"); return;}
         // cur_tb = table_name;//unnecessary daylight
     }
 

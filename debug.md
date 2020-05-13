@@ -198,3 +198,15 @@ create table table3(id Int, name varchar(20));
 create table table3(id int, name varchar);
 create table table3(id int, name varchar(20));
 ```
+
+## test6
+### badcode test
+```sql
+use test1;
+use test2;
+use test3;
+use test4;
+use test4;
+use test5;
+use test1;
+```

@@ -23,7 +23,6 @@ void Break()
             }
 }
 
-
 bool exist(const std::string& s)
 {
     FILE *fp = fopen(s.c_str(), "r");

@@ -8,12 +8,7 @@
 
 //--------------------------------------------------------------------------------------------
 
-#include <iostream>
-#include <string>
-#include <sstream>
-// #include <stdlib.h>
 #include "ui.hpp"
-#include "time_cnt.hpp"
 
 const std::string kMysql = "mysql> ";
 
@@ -85,6 +80,7 @@ std::string Interface::Input()
     string line, sentence;
     stringstream ss;
     bool already_in = false, danger = true;// to indicate whether we have input or not
+    cin.clear();
     while (getline(cin, line))
     {
         danger = false;
@@ -104,11 +100,11 @@ std::string Interface::Input()
     }
     extern bool broken;
 
-    if (danger)
-        if (broken)
-            error("Data Broken");
-        else
-            error("No input at all");
+    // if (danger)
+    //     if (broken)
+    //         error("Data Broken");
+    //     else
+    //         error("No input at all");
     time_cnt::start();
 #ifdef _LOC_
 cout << "src sentence was : " << sentence << endl;

@@ -13,7 +13,6 @@
                 "in_out.cpp",
                 "exception.cpp",
                 "time_cnt.cpp",
-                "-D _TEST5_",
                 "-o",
                 "main.exe"
             ],

@@ -13,6 +13,11 @@
 #ifndef INTERPRETER_GUARD
 #define INTERPRETER_GUARD
 
+#include <sstream>
+#include <string>
+#include <vector>
+#include <regex>
+#include <cctype>
 #include <string>
 #include "in_out.hpp"
 
