@@ -242,7 +242,7 @@ void CreateDatabase(const string& name)
     }
     auto it = find(dbs.begin(), dbs.end(), name);
     if (it != dbs.end())
-    { cout << "subdirectory " << name << " already exists."; return; }
+    { cout << "#ERROR subdirectory " << name << " already exists." << endl << endl; return; }
     else if (it == dbs.end())
     {
         string mkdir = "mkdir " + name;
@@ -268,10 +268,10 @@ void CreateDatabase(const string& name)
 void CreateTable(const string& name, const ColInfo& column_info)
 {
     if (cur_db.size() == 0) 
-    { cout << "#ERROR No database selected" << endl; return; }
+    { cout << "#ERROR No database selected" << endl << endl; return; }
     string file_path = cur_db + "\\" + name;
     if (exist(file_path))
-    { cout << "#ERROR file already exists"; return;}
+    { cout << "#ERROR file already exists" << endl << endl; return;}
     freopen(file_path.c_str(), "w", stdout);
     column_info.PrintInfo();// if we want to remain the const of table_info, we should define the print() as const.
     freopen("CON", "w", stdout);
@@ -302,13 +302,13 @@ void Use(string name)
     {
         string tmp = "cd " + name;
         cur_db = name; cur_tb = "";
-        cout << "#ERROR Database changed\n";
+        cout << "Database changed" << endl;
         freopen("dbs_info", "w", stdout);
         for (auto it: dbs)
             cout << it << ' ';
         freopen("CON", "w", stdout);
     }
-    else cout << "#ERROR No such subdirectory" << endl;
+    else cout << "#ERROR No such subdirectory" << endl << endl;
 }
 
 //--------------------------------------------------------------------------------------------
