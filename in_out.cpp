@@ -300,7 +300,6 @@ void Use(string name)
     auto it = find(dbs.begin(), dbs.end(), name);
     if (it != dbs.end())
     {
-        string tmp = "cd " + name;
         cur_db = name; cur_tb = "";
         cout << "Database changed" << endl;
         freopen("dbs_info", "w", stdout);
