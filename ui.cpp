@@ -125,7 +125,7 @@ cout << "src sentence was : " << sentence << endl;
 void Interface::Goodbye()
 {
     using namespace std;
-    cout << "\n Bye!" << endl;
+    cout << endl << "Bye!" << endl;
 }
 
 //--------------------------------------------------------------------------------------------
