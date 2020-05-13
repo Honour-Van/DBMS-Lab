@@ -17,10 +17,7 @@ void Break()
 {
     if (std::cin.eof() || std::cin.bad())
         if (!broken)
-            {
-                std::cerr << "Data is broken here as you can see." << std::endl;
                 broken = true;
-            }
 }
 
 bool exist(const std::string& s)

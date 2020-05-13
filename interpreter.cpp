@@ -51,7 +51,7 @@ void Interpret(const std::string& raw)
         case 'd': case 'D':
             sql_itp::Delete(raw);
             break;
-        error("sentence syntax went wrong."); 
+        std::cout << "#ERROR sentence syntax went wrong." << std::endl << std::endl; 
     }
 #ifdef _LOC_
 std::clog << "finished once" << std::endl;
@@ -94,7 +94,7 @@ void Create(char mode, const string& src)
         std::regex pattern{"^.*?create.*?database.*?(\\w+).*?;$", std::regex::icase};
         std::smatch mat;
         if (!regex_match(src, mat, pattern))
-        { error("create database : syntax wrong"); return; }
+        { std::cout << "#ERROR create database : syntax wrong" << std::endl << std::endl; return; }
         in_out::CreateDatabase(mat[1]);
     }
     else if (mode == 't' || mode == 'T')// 
@@ -103,7 +103,7 @@ void Create(char mode, const string& src)
                                 //table name must be in the alphas, nums and '_'
         std::smatch mat;
         if (!regex_match(src, mat, pattern))
-        { error("create table : syntax wrong"); return;}//mat[1] is tablename, mat[2] is the param of columns.
+        { std::cout << "#ERROR create table : syntax wrong" << std::endl << std::endl; return;}//mat[1] is tablename, mat[2] is the param of columns.
     #ifdef _LOC_
         else 
     std::clog << "create table matched" << std::endl;
@@ -121,7 +121,7 @@ void Create(char mode, const string& src)
             if (type[0] == 'i' || type[0] == 'I') 
             {    
                 if (!type.compare(0,3, "int", 0,3) && !type.compare(0,3, "INT", 0, 3))
-                { error("var table type illegal"); return;}
+                { std::cout << "#ERROR var table type illegal" << std::endl << std::endl; return;}
                 else param.AddCol(name, 0);
             }
             else if (type[0] == 'v' || type[0] == 'V') //this may be improved : in the form of 'varchar (20)' isn;t supported
@@ -129,23 +129,23 @@ void Create(char mode, const string& src)
             {
                 int cnt = 7, ans = 0;
                 if (!(type.compare(0, 7, "varchar", 0, 7)||type.compare(0, 7, "VARCHAR", 0, 7)))
-                { error("var table type illegal"); return;}
+                { std::cout << "#ERROR var table type illegal" << std::endl << std::endl; return;}
                 for (; cnt < type.size() && (!std::isdigit(type[cnt])); cnt++);
                 if (cnt != type.size())
                     while (std::isdigit(type[cnt]))
                         ans = ans * 10 + (type[cnt]-'0'), cnt++;
-                else { error("var table type illegal"); return;}
+                else { std::cout << "#ERROR var table type illegal" << std::endl << std::endl; return;}
                 param.AddCol(name, ans);
             }
             else 
-            { error("var table type illegal"); return;}
+            { std::cout << "#ERROR var table type illegal" << std::endl << std::endl; return;}
         }
 #ifdef _LOC_
 std::clog << "create table prepared" << std::endl << std::endl;
 #endif
         in_out::CreateTable(mat[1], param);
     }
-    else error("create table mode wrong.");
+    else std::cout << "#ERROR create table mode wrong." << std::endl << std::endl;
 }
 
 /**
@@ -158,7 +158,7 @@ void Use(const string& src)
     std::regex pattern{"^.*?use.*?(\\w+).*?;", std::regex::icase};
     std::smatch mat;
     if (!regex_match(src, mat, pattern))
-    { error("use sentence wrong"); return; };
+    { using namespace std; cout << "#ERROR use sentence wrong" << endl << endl; return; };
     string tmp = mat[1].str();
     trim(tmp);
     in_out::Use(tmp);
@@ -176,7 +176,7 @@ void Insert(const string& src)
     std::regex pattern{"^.*?insert.*?into.*?(\\w+).*?value.*?[(]\\s*(.*)[)].*?;.*?$", std::regex::icase};
     std::smatch mat;
     if (!regex_match(src, mat, pattern))
-    { error("insert syntax wrong: whole sentence"); return; }
+    { using namespace std; cout << "#ERROR insert syntax wrong: whole sentence" << endl << endl; return; }
     std::string name(mat[1]);
     std::stringstream ss(mat[2]);
     std::vector<string> vec_param;
@@ -207,7 +207,7 @@ void Select(const string& src)
     std::regex pattern{"^.*?select\\s*(.*)\\s*from\\s+(\\w+)\\s*(where.*?)*\\s*;.*?$", std::regex::icase};
     std::smatch mat;
     if (!regex_match(src, mat, pattern))
-    { error("select syntax wrong: whole sentence"); return;};
+    { using namespace std; cout << "#ERROR select syntax wrong: whole sentence" << endl << endl; return;};
     std::string name(mat[2]);
     std::stringstream ss(mat[1]);
     std::vector<string> vec_param;
@@ -233,7 +233,7 @@ void Update(const string& src)
     std::regex pattern{"^.*?update\\s+(\\w+)\\s+set\\s+(.*?)\\s*=\\s*(.+?)\\s+(where.*?)\\s*;.*?$", std::regex::icase};
     std::smatch mat;
     if (!regex_match(src, mat, pattern))
-    { error("#ERROR: update syntax wrong: whole sentence"); return;};
+    { using namespace std; cout << "#ERROR: update syntax wrong: whole sentence" << endl << endl; return;};
     in_out::Update(mat[1].str(), mat[2].str(), mat[3].str(), Where(mat[4].str()));
 }
 
@@ -248,7 +248,7 @@ void Delete(const string& src)
     std::regex pattern{"^.*?delete\\s+from\\s+(\\w+)\\s+(where.*?)\\s*;.*?$", std::regex::icase};
     std::smatch mat;
     if (!regex_match(src, mat, pattern))
-    { error("delete sentence wrong"); return; };
+    { using namespace std; cout << "#ERROR delete sentence wrong" << endl << endl; return; };
     in_out::Delete(mat[1].str(), Where(mat[2].str()));
 }
 

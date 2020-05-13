@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <climits>
 #include "time_cnt.hpp"
 
 //--------------------------------------------------------------------------------------------
@@ -22,7 +23,18 @@ void Break();
 
 inline void error(const std::string& errormessage)
 {
-    throw std::runtime_error(errormessage);
+    // static int times = 0;
+    using namespace std;
+    // throw std::runtime_error(errormessage);
+    // times++;
+    // if (times >= 2)
+    // {system("cls"); times = 0;}
+    fflush(stdin); fflush(stdout);
+    system("cls");
+    cerr << "#ERROR " << errormessage << endl << endl;
+    cin.ignore(INT_MAX, '\n');//we must put an end symbol here, else we would input another INT_MAX elems to restart.
+    cin.clear();
+    system("color 1F"); time_cnt::Sleep2(); system("color 0F");
 }
 
 inline void error(std::string s1, std::string s2)
